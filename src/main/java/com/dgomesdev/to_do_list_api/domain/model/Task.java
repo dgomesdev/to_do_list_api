@@ -1,23 +1,21 @@
 package com.dgomesdev.to_do_list_api.domain.model;
 
-import jakarta.persistence.Entity;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
-import jakarta.persistence.Id;
+import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
 
 import java.util.UUID;
 
-@Entity(name = "tb_task")
+@Entity(name = "tb_tasks")
 @Getter
 @Setter
-public class Task {
+public final class Task {
         @Id
         @GeneratedValue(strategy = GenerationType.UUID)
-        UUID id;
-        String title;
-        String description;
-        String priority;
-        String status;
+        private UUID id;
+        private String title;
+        private String description;
+        private String priority;
+        private String status;
+        private UUID userId;
 }
