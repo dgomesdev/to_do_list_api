@@ -4,14 +4,14 @@ import com.auth0.jwt.JWT;
 import com.auth0.jwt.algorithms.Algorithm;
 import com.auth0.jwt.exceptions.JWTCreationException;
 import com.auth0.jwt.exceptions.JWTVerificationException;
-import com.dgomesdev.to_do_list_api.domain.model.User;
 import com.dgomesdev.to_do_list_api.service.TokenService;
+import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
+import java.io.IOException;
 import java.time.Instant;
-import java.time.LocalDateTime;
-import java.time.ZoneOffset;
+import java.time.temporal.ChronoUnit;
 
 @Service
 public class TokenServiceImpl implements TokenService {
@@ -19,38 +19,58 @@ public class TokenServiceImpl implements TokenService {
     @Value("${api:security:token:secret}")
     private String secret;
 
+    private Algorithm buildAlgorithm(String secret) {
+        return Algorithm.HMAC256(secret);
+    }
+
     @Override
-    public String generateToken(User user) {
+    public String generateToken(String username) {
         try {
-            Algorithm algorithm = Algorithm.HMAC256(secret);
+            if (username == null || username.isBlank())
+                throw new JWTCreationException(
+                        "Invalid username",
+                        new RuntimeException()
+                );
             return JWT
                     .create()
                     .withIssuer("to_do_list_api")
-                    .withSubject(user.getUsername())
+                    .withSubject(username)
                     .withExpiresAt(getTokenExpirationDate())
-                    .sign(algorithm);
-        } catch (JWTCreationException exception) {
-            throw new RuntimeException("Error on token creation", exception);
+                    .sign(buildAlgorithm(secret));
+        } catch (Exception e) {
+            throw new JWTCreationException(
+                    "Error while generating token: " + e.getLocalizedMessage(),
+                    new RuntimeException()
+            );
         }
     }
 
     @Override
-    public String validateToken(String token) {
+    public String validateToken(HttpServletRequest request) {
         try {
-            Algorithm algorithm = Algorithm.HMAC256(secret);
+            var token = recoverToken(request);
             return JWT
-                    .require(algorithm)
+                    .require(buildAlgorithm(secret))
                     .withIssuer("to_do_list_api")
                     .build()
                     .verify(token)
                     .getSubject();
-        } catch (JWTVerificationException exception) {
-            return "";
+        } catch (Exception e) {
+            throw new JWTVerificationException(
+                    "Error while validating token: " + e.getLocalizedMessage(),
+                    new RuntimeException()
+            );
         }
+    }
+
+    private String recoverToken(HttpServletRequest request) throws IOException {
+        var authHeader = request.getHeader("Authorization");
+        if (authHeader == null) throw new IOException("The token is null.");
+        return authHeader.replace("Bearer ", "");
     }
 
     @Override
     public Instant getTokenExpirationDate() {
-        return LocalDateTime.now().plusHours(2).toInstant(ZoneOffset.of("-03:00"));
+        return Instant.now().plus(2, ChronoUnit.HOURS);
     }
 }

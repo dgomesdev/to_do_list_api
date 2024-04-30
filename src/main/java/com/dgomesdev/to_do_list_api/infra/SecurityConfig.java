@@ -30,7 +30,7 @@ public class SecurityConfig {
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(authorize -> authorize
                         .requestMatchers(HttpMethod.POST, "/login", "/register").permitAll()
-                        .requestMatchers("/h2-console/**", "/swagger-ui/**").permitAll()
+                        .requestMatchers("/h2-console/**").permitAll()
                         .anyRequest()
                         .authenticated()
                 )
