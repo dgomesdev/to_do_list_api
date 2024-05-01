@@ -58,6 +58,15 @@ public class AuthControllerTest {
             .withExpiresAt(Instant.now().plus(360, ChronoUnit.SECONDS))
             .sign(Algorithm.HMAC256("mySecretKey"));
 
+    private User mockUserRetrievalAndAuthentication() {
+        User mockUser = new User(UUID.randomUUID(), username, email, password, UserRole.USER);
+        when(userService.findUserByUsername(username)).thenReturn(mockUser);
+        when(authenticationManager.authenticate(new UsernamePasswordAuthenticationToken(username, password))).thenReturn(
+                new UsernamePasswordAuthenticationToken(mockUser, password, mockUser.getAuthorities()));
+        return mockUser;
+    }
+
+
     @Test
     @DisplayName("Should register user successfully")
     public void givenNewUser_whenRegisteringUser_returnOkResponse() {
@@ -88,7 +97,7 @@ public class AuthControllerTest {
 
     @Test
     @DisplayName("Should return an internal server error response when trying to register an already existent user")
-    public void givenAlreadyExistentUser_whenRegisteringUser_returnBInternalServerErrorResponse() {
+    public void givenAlreadyExistentUser_whenRegisteringUser_returnInternalServerErrorResponse() {
         //GIVEN
         doThrow(new UserAlreadyExistsException()).when(userService).saveUser(any());
 
@@ -106,10 +115,8 @@ public class AuthControllerTest {
     @DisplayName("Should log in user successfully")
     public void givenValidAttributes_whenLoggingInUser_thenReturnOkResponse() {
         //GIVEN
-        when(userService.findUserByUsername(username)).thenReturn(new User(UUID.randomUUID(), username, email, password, UserRole.USER));
-        var authentication = new UsernamePasswordAuthenticationToken(authRequestDto.username(), authRequestDto.password());
-        when(authenticationManager.authenticate(authentication)).thenReturn(authentication);
-        when(tokenService.generateToken(authRequestDto.username())).thenReturn(validToken);
+        var user = mockUserRetrievalAndAuthentication();
+        when(tokenService.generateToken(user)).thenReturn(validToken);
 
         //WHEN
         var response = authController.login(authRequestDto);
@@ -118,6 +125,7 @@ public class AuthControllerTest {
         assertEquals(HttpStatus.OK, response.getStatusCode());
         assertNotNull(response.getBody());
         assertTrue(response.getBody().contains("Login successful for user " + username));
+        //verify(authenticationManager).authenticate(mockUsernamePassword);
         System.out.println(response.getBody());
     }
 
@@ -139,10 +147,8 @@ public class AuthControllerTest {
     @DisplayName("Should return an internal server error response when trying to logging in user with invalid credentials")
     public void givenInvalidAttributes_whenLoggingInUser_returnBInternalServerErrorResponse() {
         //GIVEN
-        when(userService.findUserByUsername(username)).thenReturn(new User(UUID.randomUUID(), username, email, password, UserRole.USER));
-        var authentication = new UsernamePasswordAuthenticationToken(authRequestDto.username(), authRequestDto.password());
-        when(authenticationManager.authenticate(authentication)).thenReturn(authentication);
-        when(tokenService.generateToken(authRequestDto.username())).thenThrow(JWTCreationException.class);
+        var user = mockUserRetrievalAndAuthentication();
+        when(tokenService.generateToken(user)).thenThrow(JWTCreationException.class);
 
         //WHEN
         ResponseEntity<String> response = authController.login(authRequestDto);

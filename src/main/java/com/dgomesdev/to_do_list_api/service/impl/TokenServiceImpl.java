@@ -7,6 +7,7 @@ import com.auth0.jwt.exceptions.JWTVerificationException;
 import com.dgomesdev.to_do_list_api.service.TokenService;
 import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Service;
 
 import java.io.IOException;
@@ -24,17 +25,17 @@ public class TokenServiceImpl implements TokenService {
     }
 
     @Override
-    public String generateToken(String username) {
+    public String generateToken(UserDetails user) {
         try {
-            if (username == null || username.isBlank())
+            if (user == null || user.getUsername().isBlank())
                 throw new JWTCreationException(
-                        "Invalid username",
+                        "Invalid user",
                         new RuntimeException()
                 );
             return JWT
                     .create()
                     .withIssuer("to_do_list_api")
-                    .withSubject(username)
+                    .withSubject(user.getUsername())
                     .withExpiresAt(getTokenExpirationDate())
                     .sign(buildAlgorithm(secret));
         } catch (Exception e) {

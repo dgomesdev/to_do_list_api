@@ -16,6 +16,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.*;
 
 @CrossOrigin
@@ -69,8 +70,11 @@ public class AuthController {
                     authRequestDto.username(),
                     authRequestDto.password()
             );
+            System.out.println(usernamePassword);
             var auth = authenticationManager.authenticate(usernamePassword);
-            var token = tokenService.generateToken(auth.getPrincipal().toString());
+            System.out.println("auth = " + auth);
+            System.out.println("principal = " + auth.getPrincipal());
+            var token = tokenService.generateToken((UserDetails) auth.getPrincipal());
             return ResponseEntity
                     .status(HttpStatus.OK)
                     .body("Login successful for user " + authRequestDto.username() + " with token " + token);

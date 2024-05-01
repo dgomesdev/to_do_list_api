@@ -4,6 +4,8 @@ import com.auth0.jwt.JWT;
 import com.auth0.jwt.algorithms.Algorithm;
 import com.auth0.jwt.exceptions.JWTCreationException;
 import com.auth0.jwt.exceptions.JWTVerificationException;
+import com.dgomesdev.to_do_list_api.domain.model.User;
+import com.dgomesdev.to_do_list_api.domain.model.UserRole;
 import jakarta.servlet.http.HttpServletRequest;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -16,6 +18,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import java.lang.reflect.Field;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
+import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.when;
@@ -31,6 +34,14 @@ class TokenServiceImplTest {
 
     private Field secretField;
 
+    private final User user = new User(
+            UUID.randomUUID(),
+            "username",
+            "email",
+            "password",
+            UserRole.USER
+    );
+
     @BeforeEach
     void setUp() throws Exception {
         secretField = TokenServiceImpl.class.getDeclaredField("secret");
@@ -42,10 +53,8 @@ class TokenServiceImplTest {
     @DisplayName("Should generate token successfully")
     void givenValidAttributes_whenGeneratingToken_thenReturnValidToken() {
         // GIVEN
-        String username = "username";
-
         // WHEN
-        String token = tokenService.generateToken(username);
+        String token = tokenService.generateToken(user);
 
         // THEN
         assertNotNull(token);
@@ -56,36 +65,43 @@ class TokenServiceImplTest {
     @DisplayName("Should throw exception when token secret is null")
     void givenInvalidSecret_whenGeneratingToken_thenThrowException() throws IllegalAccessException {
         // GIVEN
-        String username = "username";
         secretField.set(tokenService, null);
 
         // WHEN
-        var exception = assertThrows(JWTCreationException.class, () -> tokenService.generateToken(username));
+        var exception = assertThrows(JWTCreationException.class, () -> tokenService.generateToken(user));
 
         // THEN
         assertEquals("Error while generating token: The Secret cannot be null", exception.getLocalizedMessage());
     }
 
     @Test
-    @DisplayName("Should throw exception when username is null")
+    @DisplayName("Should throw exception when user is null")
     void givenInvalidUsername_whenGeneratingToken_thenThrowException() {
         // GIVEN
         // WHEN
         var exception = assertThrows(JWTCreationException.class, () -> tokenService.generateToken(null));
 
         // THEN
-        assertEquals("Error while generating token: Invalid username", exception.getLocalizedMessage());
+        assertEquals("Error while generating token: Invalid user", exception.getLocalizedMessage());
     }
 
     @Test
     @DisplayName("Should throw exception when username is blank")
     void givenBlankUsername_whenGeneratingToken_thenThrowException() {
         // GIVEN
+        var userWithoutUsername = new User(
+                UUID.randomUUID(),
+                "",
+                "email",
+                "password",
+                UserRole.USER
+        );
+
         // WHEN
-        var exception = assertThrows(JWTCreationException.class, () -> tokenService.generateToken(""));
+        var exception = assertThrows(JWTCreationException.class, () -> tokenService.generateToken(userWithoutUsername));
 
         // THEN
-        assertEquals("Error while generating token: Invalid username", exception.getLocalizedMessage());
+        assertEquals("Error while generating token: Invalid user", exception.getLocalizedMessage());
     }
 
     @Test
