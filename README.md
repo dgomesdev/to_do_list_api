@@ -40,7 +40,3 @@ classDiagram
 ### How to Run the Application
 
 Clone the repository/download and unzip the source code and run using an IDE.
-
-## Note
-
-The application was designed to perform the search by consulting an API hosted on an EC2 instance of AWS.
