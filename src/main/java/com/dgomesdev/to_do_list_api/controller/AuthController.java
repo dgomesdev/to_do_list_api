@@ -26,11 +26,11 @@ import org.springframework.web.bind.annotation.*;
 public class AuthController {
 
     @Autowired
-    private AuthenticationManager authenticationManager;
-    @Autowired
     private UserServiceImpl userService;
     @Autowired
     private TokenServiceImpl tokenService;
+    @Autowired
+    private AuthenticationManager authenticationManager;
 
     @PostMapping("register")
     @Operation(summary = "Register an user", description = "Create the user")
@@ -66,14 +66,8 @@ public class AuthController {
     public ResponseEntity<String> login(@RequestBody @Valid AuthRequestDto authRequestDto) {
         try {
             userService.findUserByUsername(authRequestDto.username());
-            var usernamePassword = new UsernamePasswordAuthenticationToken(
-                    authRequestDto.username(),
-                    authRequestDto.password()
-            );
-            System.out.println(usernamePassword);
+            var usernamePassword = new UsernamePasswordAuthenticationToken(authRequestDto.username(), authRequestDto.password());
             var auth = authenticationManager.authenticate(usernamePassword);
-            System.out.println("auth = " + auth);
-            System.out.println("principal = " + auth.getPrincipal());
             var token = tokenService.generateToken((UserDetails) auth.getPrincipal());
             return ResponseEntity
                     .status(HttpStatus.OK)

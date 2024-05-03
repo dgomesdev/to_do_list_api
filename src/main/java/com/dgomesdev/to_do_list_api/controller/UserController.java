@@ -4,6 +4,7 @@ import com.dgomesdev.to_do_list_api.controller.dto.request.UserRequestDto;
 import com.dgomesdev.to_do_list_api.controller.dto.response.UserResponseDto;
 import com.dgomesdev.to_do_list_api.domain.exception.UnauthorizedUserException;
 import com.dgomesdev.to_do_list_api.domain.exception.UserNotFoundException;
+import com.dgomesdev.to_do_list_api.service.impl.TokenServiceImpl;
 import com.dgomesdev.to_do_list_api.service.impl.UserServiceImpl;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
@@ -27,6 +28,9 @@ public class UserController {
 
     @Autowired
     private UserServiceImpl userService;
+
+    @Autowired
+    private TokenServiceImpl tokenService;
 
     @GetMapping("/{userId}")
     @Operation(summary = "Find user by Id", description = "Find a specific user")
@@ -63,13 +67,14 @@ public class UserController {
     })
     public ResponseEntity<String> updateUser(@PathVariable UUID userId, @RequestBody @Valid UserRequestDto userRequestDto, HttpServletRequest request) {
         try {
-            if (request.getAttribute("userId") != userId) throw new UnauthorizedUserException();
+            if (!request.getAttribute("userId").equals(userId)) throw new UnauthorizedUserException();
             var userEntity = userService.findUserById(userId);
             BeanUtils.copyProperties(userRequestDto, userEntity);
             userService.updateUser(userEntity);
+            var token = tokenService.generateToken(userEntity);
             return ResponseEntity
                     .status(HttpStatus.OK)
-                    .body("User updated successfully");
+                    .body("User updated successfully. New token: " + token);
         } catch (UnauthorizedUserException e) {
             return ResponseEntity
                     .status(HttpStatus.UNAUTHORIZED)
@@ -99,7 +104,7 @@ public class UserController {
     })
     public ResponseEntity<String> deleteUser(@PathVariable UUID userId, HttpServletRequest request) {
         try {
-            if (request.getAttribute("userId") != userId) throw new UnauthorizedUserException();
+            if (!request.getAttribute("userId").equals(userId)) throw new UnauthorizedUserException();
             userService.deleteUser(userId);
             return ResponseEntity
                     .status(HttpStatus.NO_CONTENT)

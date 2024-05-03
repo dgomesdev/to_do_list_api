@@ -76,7 +76,7 @@ public class TaskController {
     ) {
         try {
             var foundTask = taskService.findTaskById(taskId);
-            if (request.getAttribute("userId") != foundTask.getUserId()) throw new UnauthorizedUserException();
+            if (!foundTask.getUserId().equals(request.getAttribute("userId"))) throw new UnauthorizedUserException();
             return ResponseEntity
                     .status(HttpStatus.OK)
                     .body(new TaskResponseDto(foundTask));
@@ -141,10 +141,10 @@ public class TaskController {
             HttpServletRequest request
     ) {
         try {
-            var taskEntity = taskService.findTaskById(taskId);
-            if(request.getAttribute("userId") != taskEntity.getUserId()) throw new UnauthorizedUserException();
-            BeanUtils.copyProperties(taskRequestDto, taskEntity);
-            taskService.updateTask(taskEntity);
+            var foundTask = taskService.findTaskById(taskId);
+            if (!foundTask.getUserId().equals(request.getAttribute("userId"))) throw new UnauthorizedUserException();
+            BeanUtils.copyProperties(taskRequestDto, foundTask);
+            taskService.updateTask(foundTask);
             return ResponseEntity
                     .status(HttpStatus.OK)
                     .body("Task updated successfully");
@@ -177,7 +177,7 @@ public class TaskController {
     ) {
         try {
             var foundTask = taskService.findTaskById(taskId);
-            if (request.getAttribute("userId") != foundTask.getUserId()) throw new UnauthorizedUserException();
+            if (!foundTask.getUserId().equals(request.getAttribute("userId"))) throw new UnauthorizedUserException();
             taskService.deleteTask(foundTask);
             return ResponseEntity
                     .status(HttpStatus.NO_CONTENT)

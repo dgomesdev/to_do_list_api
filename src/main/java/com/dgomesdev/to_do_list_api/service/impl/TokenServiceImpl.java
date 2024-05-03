@@ -27,11 +27,7 @@ public class TokenServiceImpl implements TokenService {
     @Override
     public String generateToken(UserDetails user) {
         try {
-            if (user == null || user.getUsername().isBlank())
-                throw new JWTCreationException(
-                        "Invalid user",
-                        new RuntimeException()
-                );
+            if (user.getUsername() == null || user.getUsername().isBlank())  throw new JWTCreationException("Invalid user", new RuntimeException());
             return JWT
                     .create()
                     .withIssuer("to_do_list_api")

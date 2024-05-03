@@ -125,7 +125,6 @@ public class AuthControllerTest {
         assertEquals(HttpStatus.OK, response.getStatusCode());
         assertNotNull(response.getBody());
         assertTrue(response.getBody().contains("Login successful for user " + username));
-        //verify(authenticationManager).authenticate(mockUsernamePassword);
         System.out.println(response.getBody());
     }
 
