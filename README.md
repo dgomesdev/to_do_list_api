@@ -2,7 +2,7 @@
 
 ### Description
 
-This application allows its user to search the internet and get Google results in a simplified manner, with the title and link of each result.
+This application allows the user to register, login, add, modify and delete tasks.
 
 ## Class diagram
 
