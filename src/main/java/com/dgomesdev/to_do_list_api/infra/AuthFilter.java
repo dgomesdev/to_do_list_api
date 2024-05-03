@@ -33,7 +33,6 @@ public class AuthFilter extends OncePerRequestFilter {
     ) throws ServletException, IOException {
         try {
             var username = tokenService.validateToken(request);
-            System.out.println(username);
             UserDetails userDetails = userService.loadUserByUsername(username);
             var authentication = new UsernamePasswordAuthenticationToken(userDetails, null, userDetails.getAuthorities());
             SecurityContextHolder.getContext().setAuthentication(authentication);
@@ -41,6 +40,7 @@ public class AuthFilter extends OncePerRequestFilter {
             request.setAttribute("userId", user.getId());
         } catch (Exception e) {
             System.out.println(e.getLocalizedMessage());
+            response.sendError(403, "Unauthenticated user");
         } finally {
             filterChain.doFilter(request, response);
         }

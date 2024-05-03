@@ -60,7 +60,7 @@ public class AuthController {
     @Operation(summary = "Login", description = "User login")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "Login successful for user"),
-            @ApiResponse(responseCode = "403", description = "User not found"),
+            @ApiResponse(responseCode = "401", description = "User not found"),
             @ApiResponse(responseCode = "500", description = "Error while logging in")
     })
     public ResponseEntity<String> login(@RequestBody @Valid AuthRequestDto authRequestDto) {

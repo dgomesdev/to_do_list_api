@@ -60,7 +60,7 @@ public class UserController {
     @Operation(summary = "Update an user", description = "Update the user's data")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "User updated"),
-            @ApiResponse(responseCode = "403", description = "Unauthorized user"),
+            @ApiResponse(responseCode = "401", description = "Unauthorized user"),
             @ApiResponse(responseCode = "404", description = "User not found"),
             @ApiResponse(responseCode = "400", description = "Invalid user"),
             @ApiResponse(responseCode = "500", description = "Error while updating the user")
@@ -98,7 +98,7 @@ public class UserController {
     @Operation(summary = "Delete an user", description = "Delete the user")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "204", description = "User deleted"),
-            @ApiResponse(responseCode = "403", description = "Unauthorized user"),
+            @ApiResponse(responseCode = "401", description = "Unauthorized user"),
             @ApiResponse(responseCode = "404", description = "User not found"),
             @ApiResponse(responseCode = "500", description = "Error while deleting the user")
     })

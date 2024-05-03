@@ -47,7 +47,6 @@ class TaskControllerTest {
         mockUserId = UUID.randomUUID();
         mockTaskId = UUID.randomUUID();
         mockRequest = mock(HttpServletRequest.class);
-        mockRequest.setAttribute("userId", mockUserId);
         mockTaskRequestDto = new TaskRequestDto(
                 "TaskTitle",
                 "TaskDescription",

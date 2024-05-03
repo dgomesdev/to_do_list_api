@@ -4,6 +4,7 @@ import com.dgomesdev.to_do_list_api.controller.dto.request.UserRequestDto;
 import com.dgomesdev.to_do_list_api.domain.exception.UserNotFoundException;
 import com.dgomesdev.to_do_list_api.domain.model.User;
 import com.dgomesdev.to_do_list_api.domain.model.UserRole;
+import com.dgomesdev.to_do_list_api.service.impl.TokenServiceImpl;
 import com.dgomesdev.to_do_list_api.service.impl.UserServiceImpl;
 import jakarta.servlet.http.HttpServletRequest;
 import org.junit.jupiter.api.BeforeEach;
@@ -28,6 +29,9 @@ class UserControllerTest {
     private UserServiceImpl userService;
 
     @Mock
+    private TokenServiceImpl tokenService;
+
+    @Mock
     HttpServletRequest mockRequest;
 
     @InjectMocks
@@ -41,7 +45,6 @@ class UserControllerTest {
     void setup() {
         mockUserId = UUID.randomUUID();
         mockRequest = mock(HttpServletRequest.class);
-        mockRequest.setAttribute("userId", mockUserId);
         mockUserRequestDto = new UserRequestDto(
                 "username",
                 "email",
@@ -107,13 +110,15 @@ class UserControllerTest {
         when(mockRequest.getAttribute("userId")).thenReturn(mockUserId);
         when(userService.findUserById(any())).thenReturn(mockUser);
         doNothing().when(userService).updateUser(any());
+        when(tokenService.generateToken(any())).thenReturn("ok");
 
         //WHEN
         var responseOk = userController.updateUser(mockUserId, mockUserRequestDto, mockRequest);
 
         //THEN
         assertEquals(HttpStatus.OK, responseOk.getStatusCode());
-        assertEquals("User updated successfully", responseOk.getBody());
+        assertNotNull(responseOk.getBody());
+        assertTrue(responseOk.getBody().contains("User updated successfully"));
     }
 
     @Test

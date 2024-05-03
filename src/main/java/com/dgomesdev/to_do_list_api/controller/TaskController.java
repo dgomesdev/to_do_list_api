@@ -38,7 +38,7 @@ public class TaskController {
     @Operation(summary = "Save task", description = "Create a task")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "201", description = "Task saved"),
-            @ApiResponse(responseCode = "403", description = "Unauthorized user"),
+            @ApiResponse(responseCode = "401", description = "Unauthorized user"),
             @ApiResponse(responseCode = "500", description = "Error while saving the task"),
     })
     public ResponseEntity<String> saveTask(
@@ -66,7 +66,7 @@ public class TaskController {
     @Operation(summary = "Find task by Id", description = "Find a specific task")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "Task found"),
-            @ApiResponse(responseCode = "403", description = "Unauthorized user"),
+            @ApiResponse(responseCode = "401", description = "Unauthorized user"),
             @ApiResponse(responseCode = "404", description = "Task not found"),
             @ApiResponse(responseCode = "500", description = "Error while saving the task")
     })
@@ -99,7 +99,7 @@ public class TaskController {
     @Operation(summary = "Find all tasks", description = "List all the user's tasks")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "Tasks found"),
-            @ApiResponse(responseCode = "403", description = "Unauthorized user"),
+            @ApiResponse(responseCode = "401", description = "Unauthorized user"),
             @ApiResponse(responseCode = "500", description = "Error while listing the tasks")
     })
     public ResponseEntity<Object> findAllTasks(
@@ -131,7 +131,7 @@ public class TaskController {
     @Operation(summary = "Update task", description = "Update a task")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "Task updated"),
-            @ApiResponse(responseCode = "403", description = "Unauthorized user"),
+            @ApiResponse(responseCode = "401", description = "Unauthorized user"),
             @ApiResponse(responseCode = "404", description = "Task not found"),
             @ApiResponse(responseCode = "500", description = "Error while updating the task"),
     })
@@ -167,7 +167,7 @@ public class TaskController {
     @Operation(summary = "Delete task", description = "Delete a task")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "204", description = "Task deleted"),
-            @ApiResponse(responseCode = "403", description = "Unauthorized user"),
+            @ApiResponse(responseCode = "401", description = "Unauthorized user"),
             @ApiResponse(responseCode = "404", description = "Task not found"),
             @ApiResponse(responseCode = "500", description = "Error while deleting the task")
     })
