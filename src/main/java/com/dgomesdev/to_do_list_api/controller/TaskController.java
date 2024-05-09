@@ -1,11 +1,14 @@
 package com.dgomesdev.to_do_list_api.controller;
 
 import com.dgomesdev.to_do_list_api.controller.dto.request.TaskRequestDto;
+import com.dgomesdev.to_do_list_api.controller.dto.response.AllTasksResponseDto;
+import com.dgomesdev.to_do_list_api.controller.dto.response.MessageDto;
+import com.dgomesdev.to_do_list_api.controller.dto.response.ResponseDto;
 import com.dgomesdev.to_do_list_api.controller.dto.response.TaskResponseDto;
 import com.dgomesdev.to_do_list_api.domain.exception.TaskNotFoundException;
 import com.dgomesdev.to_do_list_api.domain.exception.UnauthorizedUserException;
 import com.dgomesdev.to_do_list_api.domain.exception.UserNotFoundException;
-import com.dgomesdev.to_do_list_api.domain.model.Task;
+import com.dgomesdev.to_do_list_api.domain.model.TaskModel;
 import com.dgomesdev.to_do_list_api.service.impl.TaskServiceImpl;
 import com.dgomesdev.to_do_list_api.service.impl.UserServiceImpl;
 import io.swagger.v3.oas.annotations.Operation;
@@ -41,24 +44,24 @@ public class TaskController {
             @ApiResponse(responseCode = "401", description = "Unauthorized user"),
             @ApiResponse(responseCode = "500", description = "Error while saving the task"),
     })
-    public ResponseEntity<String> saveTask(
+    public ResponseEntity<ResponseDto> saveTask(
             @RequestBody @Valid TaskRequestDto taskRequestDto,
             HttpServletRequest request
     ) {
         try {
-            var userId = userService.findUserById((UUID) request.getAttribute("userId")).getId();
-            taskService.saveTask(new Task(taskRequestDto, userId));
+            var userId = userService.findUserById((UUID) request.getAttribute("userId")).id();
+            taskService.saveTask(new TaskModel(UUID.randomUUID() ,taskRequestDto, userId));
             return ResponseEntity
                     .status(HttpStatus.CREATED)
-                    .body("Task created successfully");
+                    .body(new MessageDto("Task created successfully"));
         } catch (UserNotFoundException e) {
             return ResponseEntity
                     .status(HttpStatus.UNAUTHORIZED)
-                    .body("Unauthorized user");
+                    .body(new MessageDto("Unauthorized user"));
         } catch (Exception e) {
             return ResponseEntity
                     .status(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .body("Error while saving the task: " + e.getLocalizedMessage());
+                    .body(new MessageDto("Error while saving the task: " + e.getLocalizedMessage()));
         }
     }
 
@@ -70,28 +73,28 @@ public class TaskController {
             @ApiResponse(responseCode = "404", description = "Task not found"),
             @ApiResponse(responseCode = "500", description = "Error while saving the task")
     })
-    public ResponseEntity<Object> findTaskById(
+    public ResponseEntity<ResponseDto> findTaskById(
             @PathVariable UUID taskId,
             HttpServletRequest request
     ) {
         try {
             var foundTask = taskService.findTaskById(taskId);
-            if (!foundTask.getUserId().equals(request.getAttribute("userId"))) throw new UnauthorizedUserException();
+            if (!foundTask.id().equals(request.getAttribute("userId"))) throw new UnauthorizedUserException();
             return ResponseEntity
                     .status(HttpStatus.OK)
                     .body(new TaskResponseDto(foundTask));
         } catch (UnauthorizedUserException e) {
             return ResponseEntity
                     .status(HttpStatus.UNAUTHORIZED)
-                    .body(e.getLocalizedMessage());
+                    .body(new MessageDto(e.getLocalizedMessage()));
         } catch (TaskNotFoundException e) {
             return ResponseEntity
                     .status(HttpStatus.NOT_FOUND)
-                    .body("Task not found");
+                    .body(new MessageDto("Task not found"));
         } catch (Exception e) {
             return ResponseEntity
                     .status(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .body("Error while saving task: " + e.getLocalizedMessage());
+                    .body(new MessageDto("Error while saving task: " + e.getLocalizedMessage()));
         }
     }
 
@@ -102,7 +105,7 @@ public class TaskController {
             @ApiResponse(responseCode = "401", description = "Unauthorized user"),
             @ApiResponse(responseCode = "500", description = "Error while listing the tasks")
     })
-    public ResponseEntity<Object> findAllTasks(
+    public ResponseEntity<ResponseDto> findAllTasks(
             HttpServletRequest request
     ) {
         try {
@@ -115,15 +118,15 @@ public class TaskController {
                     .toList();
             return ResponseEntity
                     .status(HttpStatus.OK)
-                    .body(tasksList);
+                    .body(new AllTasksResponseDto(tasksList));
         } catch (UserNotFoundException e) {
             return ResponseEntity
                     .status(HttpStatus.UNAUTHORIZED)
-                    .body("Unauthorized user");
+                    .body(new MessageDto("Unauthorized user"));
         } catch (Exception e) {
             return ResponseEntity
                     .status(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .body("Error while listing the tasks: " + e.getLocalizedMessage());
+                    .body(new MessageDto("Error while listing the tasks: " + e.getLocalizedMessage()));
         }
     }
 
@@ -135,31 +138,31 @@ public class TaskController {
             @ApiResponse(responseCode = "404", description = "Task not found"),
             @ApiResponse(responseCode = "500", description = "Error while updating the task"),
     })
-    public ResponseEntity<String> updateTask(
+    public ResponseEntity<ResponseDto> updateTask(
             @PathVariable UUID taskId,
             @RequestBody @Valid TaskRequestDto taskRequestDto,
             HttpServletRequest request
     ) {
         try {
-            var foundTask = taskService.findTaskById(taskId);
-            if (!foundTask.getUserId().equals(request.getAttribute("userId"))) throw new UnauthorizedUserException();
-            BeanUtils.copyProperties(taskRequestDto, foundTask);
-            taskService.updateTask(foundTask);
+            var taskModelToBeUpdated = taskService.findTaskById(taskId);
+            var userId = (UUID) request.getAttribute("userId");
+            if (!taskModelToBeUpdated.id().equals(userId)) throw new UnauthorizedUserException();
+            taskService.updateTask(taskModelToBeUpdated, new TaskModel(taskId, taskRequestDto, userId));
             return ResponseEntity
                     .status(HttpStatus.OK)
-                    .body("Task updated successfully");
+                    .body(new MessageDto("Task updated successfully"));
         } catch (UnauthorizedUserException e) {
             return ResponseEntity
                     .status(HttpStatus.UNAUTHORIZED)
-                    .body(e.getLocalizedMessage());
+                    .body(new MessageDto(e.getLocalizedMessage()));
         } catch (TaskNotFoundException e) {
             return ResponseEntity
                     .status(HttpStatus.NOT_FOUND)
-                    .body(e.getLocalizedMessage());
+                    .body(new MessageDto(e.getLocalizedMessage()));
         } catch (Exception e) {
             return ResponseEntity
                     .status(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .body("Error while updating the task: " + e.getLocalizedMessage());
+                    .body(new MessageDto("Error while updating the task: " + e.getLocalizedMessage()));
         }
     }
 
@@ -171,29 +174,29 @@ public class TaskController {
             @ApiResponse(responseCode = "404", description = "Task not found"),
             @ApiResponse(responseCode = "500", description = "Error while deleting the task")
     })
-    public ResponseEntity<String> deleteTask(
+    public ResponseEntity<ResponseDto> deleteTask(
             @PathVariable UUID taskId,
             HttpServletRequest request
     ) {
         try {
-            var foundTask = taskService.findTaskById(taskId);
-            if (!foundTask.getUserId().equals(request.getAttribute("userId"))) throw new UnauthorizedUserException();
-            taskService.deleteTask(foundTask);
+            var taskToBeDeleted = taskService.findTaskById(taskId);
+            if (!taskToBeDeleted.id().equals(request.getAttribute("userId"))) throw new UnauthorizedUserException();
+            taskService.deleteTask(taskToBeDeleted);
             return ResponseEntity
                     .status(HttpStatus.NO_CONTENT)
-                    .body("Task deleted successfully");
+                    .body(new MessageDto("Task deleted successfully"));
         } catch (UnauthorizedUserException e) {
             return ResponseEntity
                     .status(HttpStatus.UNAUTHORIZED)
-                    .body(e.getLocalizedMessage());
+                    .body(new MessageDto(e.getLocalizedMessage()));
         } catch (TaskNotFoundException e) {
             return ResponseEntity
                     .status(HttpStatus.NOT_FOUND)
-                    .body(e.getLocalizedMessage());
+                    .body(new MessageDto(e.getLocalizedMessage()));
         } catch (Exception e) {
             return ResponseEntity
                     .status(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .body("Error while deleting the task: " + e.getLocalizedMessage());
+                    .body(new MessageDto("Error while deleting the task: " + e.getLocalizedMessage()));
         }
     }
 }

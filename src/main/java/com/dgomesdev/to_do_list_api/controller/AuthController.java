@@ -2,8 +2,12 @@ package com.dgomesdev.to_do_list_api.controller;
 
 import com.dgomesdev.to_do_list_api.controller.dto.request.AuthRequestDto;
 import com.dgomesdev.to_do_list_api.controller.dto.request.UserRequestDto;
+import com.dgomesdev.to_do_list_api.controller.dto.response.MessageDto;
+import com.dgomesdev.to_do_list_api.controller.dto.response.ResponseDto;
 import com.dgomesdev.to_do_list_api.domain.exception.UserNotFoundException;
-import com.dgomesdev.to_do_list_api.domain.model.User;
+import com.dgomesdev.to_do_list_api.data.entity.UserEntity;
+import com.dgomesdev.to_do_list_api.domain.model.UserModel;
+import com.dgomesdev.to_do_list_api.domain.model.UserRole;
 import com.dgomesdev.to_do_list_api.service.impl.TokenServiceImpl;
 import com.dgomesdev.to_do_list_api.service.impl.UserServiceImpl;
 import io.swagger.v3.oas.annotations.Operation;
@@ -18,6 +22,8 @@ import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.*;
+
+import java.util.UUID;
 
 @CrossOrigin
 @RestController
@@ -39,20 +45,20 @@ public class AuthController {
             @ApiResponse(responseCode = "400", description = "Invalid user"),
             @ApiResponse(responseCode = "500", description = "Error while creating user")
     })
-    public ResponseEntity<String> register(@RequestBody @Valid UserRequestDto userDto) {
+    public ResponseEntity<ResponseDto> register(@RequestBody @Valid UserRequestDto userDto) {
         try {
-            userService.saveUser(new User(userDto));
+            userService.saveUser(new UserModel(UUID.randomUUID(), userDto, UserRole.USER));
             return ResponseEntity
                     .status(HttpStatus.CREATED)
-                    .body("User registered successfully");
+                    .body(new MessageDto("User registered successfully"));
         } catch (IllegalArgumentException e) {
             return ResponseEntity
                     .status(HttpStatus.BAD_REQUEST)
-                    .body("Invalid user");
+                    .body(new MessageDto("Invalid user"));
         } catch (Exception e) {
             return ResponseEntity
                     .status(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .body("Error while creating user: " + getClass() + " " + e.getLocalizedMessage());
+                    .body(new MessageDto("Error while creating user: " + getClass() + " " + e.getLocalizedMessage()));
         }
     }
 
@@ -63,7 +69,7 @@ public class AuthController {
             @ApiResponse(responseCode = "401", description = "User not found"),
             @ApiResponse(responseCode = "500", description = "Error while logging in")
     })
-    public ResponseEntity<String> login(@RequestBody @Valid AuthRequestDto authRequestDto) {
+    public ResponseEntity<ResponseDto> login(@RequestBody @Valid AuthRequestDto authRequestDto) {
         try {
             userService.findUserByUsername(authRequestDto.username());
             var usernamePassword = new UsernamePasswordAuthenticationToken(authRequestDto.username(), authRequestDto.password());
@@ -71,15 +77,15 @@ public class AuthController {
             var token = tokenService.generateToken((UserDetails) auth.getPrincipal());
             return ResponseEntity
                     .status(HttpStatus.OK)
-                    .body("Login successful for user " + authRequestDto.username() + " with token " + token);
+                    .body(new MessageDto("Login successful for user " + authRequestDto.username() + " with token " + token));
         } catch (UserNotFoundException e) {
             return ResponseEntity
                     .status(HttpStatus.UNAUTHORIZED)
-                    .body(e.getLocalizedMessage());
+                    .body(new MessageDto(e.getLocalizedMessage()));
         } catch (Exception e) {
             return ResponseEntity
                     .status(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .body("Error while logging in: " + e.getClass() + " " + e.getLocalizedMessage());
+                    .body(new MessageDto("Error while logging in: " + e.getClass() + " " + e.getLocalizedMessage()));
         }
     }
 }

@@ -2,7 +2,7 @@
 
 ### Description
 
-This application allows the user to register, login, add, modify and delete tasks. It has unit tests with Mockito and JUnit
+This application allows the userEntity to register, login, add, modify and delete tasks. It has unit tests with Mockito and JUnit
 
 ## Class diagram
 

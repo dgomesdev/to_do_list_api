@@ -1,12 +1,13 @@
 package com.dgomesdev.to_do_list_api.service.impl;
 
+import com.dgomesdev.to_do_list_api.data.entity.TaskEntity;
+import com.dgomesdev.to_do_list_api.data.repository.TaskRepository;
 import com.dgomesdev.to_do_list_api.domain.exception.TaskNotFoundException;
 import com.dgomesdev.to_do_list_api.domain.exception.UserNotFoundException;
 import com.dgomesdev.to_do_list_api.domain.model.Priority;
 import com.dgomesdev.to_do_list_api.domain.model.Status;
-import com.dgomesdev.to_do_list_api.domain.model.Task;
-import com.dgomesdev.to_do_list_api.domain.model.User;
-import com.dgomesdev.to_do_list_api.domain.repository.TaskRepository;
+import com.dgomesdev.to_do_list_api.domain.model.TaskModel;
+import com.dgomesdev.to_do_list_api.domain.model.UserModel;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -14,7 +15,9 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
-import java.util.*;
+import java.util.List;
+import java.util.Optional;
+import java.util.UUID;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.*;
@@ -35,7 +38,7 @@ class TaskServiceImplTest {
 
     private final UUID mockUserId = UUID.randomUUID();
 
-    private final Task validTask = new Task(
+    private final TaskModel mockTaskModel = new TaskModel(
             UUID.randomUUID(),
             "task title",
             "task description",
@@ -44,46 +47,47 @@ class TaskServiceImplTest {
             mockUserId
     );
 
+    private final TaskEntity mockTaskEntity = new TaskEntity(mockTaskModel);
+
     @Test
     @DisplayName("Should save task successfully")
     void givenValidTask_whenSavingTask_ThenReturnSavedTask() {
         //GIVEN
-        when(taskRepository.save(any())).thenReturn(validTask);
+        when(taskRepository.save(any())).thenReturn(mockTaskEntity);
 
         //WHEN
-        taskService.saveTask(validTask);
+        taskService.saveTask(mockTaskModel);
 
         //THEN
-        verify(taskRepository, times(1)).save(validTask);
+        verify(taskRepository, times(1)).save(mockTaskEntity);
     }
 
     @Test
     @DisplayName("Should throw an exception when trying to save an invalid task")
     void givenInvalidUser_whenSavingUser_thenThrowException() {
         //GIVEN
-        final Task newTask = new Task();
         when(taskRepository.save(any())).thenThrow(IllegalArgumentException.class);
 
         //WHEN
-        var exception = assertThrows(RuntimeException.class, () -> taskService.saveTask(newTask));
+        var exception = assertThrows(RuntimeException.class, () -> taskService.saveTask(null));
 
         //THEN
         assertTrue(exception.getLocalizedMessage().contains("Invalid task"));
-        verify(taskRepository, times(1)).save(newTask);
+        verify(taskRepository, times(1)).save(any());
     }
 
     @Test
     @DisplayName("Should find a task by ID successfully")
     void givenValidUserId_whenFindUserByUserId_theReturnUser() {
         //GIVEN
-        when(taskRepository.findById(any())).thenReturn(Optional.of(validTask));
+        when(taskRepository.findById(any())).thenReturn(Optional.of(mockTaskEntity));
 
         //WHEN
-        var foundTask = taskService.findTaskById(validTask.getId());
+        var foundTask = taskService.findTaskById(mockTaskEntity.getId());
 
         //THEN
-        assertEquals(validTask, foundTask);
-        verify(taskRepository, times(1)).findById(validTask.getId());
+        assertEquals(mockTaskModel, foundTask);
+        verify(taskRepository, times(1)).findById(mockTaskEntity.getId());
     }
 
     @Test
@@ -104,15 +108,15 @@ class TaskServiceImplTest {
     @DisplayName("Should find all tasks successfully")
     void givenValidUserId_whenFindingAllTasksByUserId_ThenReturnListOfAllTasks() {
         //GIVEN
-        final List<Task> taskList = List.of(validTask);
-        when(userService.findUserById(mockUserId)).thenReturn(new User());
-        when(taskRepository.findTasksByUserId(mockUserId)).thenReturn(taskList);
+        final List<TaskEntity> taskEntityList = List.of(mockTaskEntity);
+        when(userService.findUserById(mockUserId)).thenReturn(new UserModel(null, null, null, null, null));
+        when(taskRepository.findTasksByUserId(mockUserId)).thenReturn(taskEntityList);
 
         //WHEN
         var foundTasks = taskService.findAllTasksByUserId(mockUserId);
 
         //THEN
-        assertThat(foundTasks.get(0).getUserId()).isEqualTo(mockUserId);
+        assertThat(foundTasks.get(0).id()).isEqualTo(mockUserId);
         verify(taskRepository, times(1)).findTasksByUserId(mockUserId);
     }
 
@@ -134,13 +138,13 @@ class TaskServiceImplTest {
     @DisplayName("Should update task successfully")
     void givenValidUser_whenUpdatingUser_ThenReturnUpdatedUser() {
         //GIVEN
-        when(taskRepository.save(any())).thenReturn(validTask);
+        when(taskRepository.save(any())).thenReturn(mockTaskEntity);
 
         //WHEN
-        taskService.updateTask(validTask);
+        taskService.updateTask(mockTaskModel, mockTaskModel);
 
         //THEN
-        verify(taskRepository, times(1)).save(validTask);
+        verify(taskRepository, times(1)).save(mockTaskEntity);
 
     }
 
@@ -148,15 +152,15 @@ class TaskServiceImplTest {
     @DisplayName("Should throw an exception when trying to update a task")
     void givenInvalidUser_whenUpdatingUser_thenThrowException() {
         //GIVEN
-        final Task newTask = new Task();
+        final TaskEntity newTaskEntity = new TaskEntity();
         when(taskRepository.save(any())).thenThrow(IllegalArgumentException.class);
 
         //WHEN
-        var exception = assertThrows(RuntimeException.class, () -> taskService.updateTask(newTask));
+        var exception = assertThrows(RuntimeException.class, () -> taskService.updateTask(mockTaskModel, mockTaskModel));
 
         //THEN
         assertTrue(exception.getLocalizedMessage().contains("Invalid task"));
-        verify(taskRepository, times(1)).save(newTask);
+        verify(taskRepository, times(1)).save(newTaskEntity);
     }
 
     @Test
@@ -164,10 +168,10 @@ class TaskServiceImplTest {
     void givenValidTask_whenDeletingUser_thenDeleteUserSuccessfully() {
         //GIVEN
         //WHEN
-        taskService.deleteTask(validTask);
+        taskService.deleteTask(mockTaskModel);
 
         //THEN
-        verify(taskRepository, times(1)).delete(validTask);
+        verify(taskRepository, times(1)).delete(mockTaskEntity);
     }
 
     @Test
@@ -177,10 +181,10 @@ class TaskServiceImplTest {
         doThrow(new RuntimeException("Task not found")).when(taskRepository).delete(any());
 
         //WHEN
-        var exception = assertThrows(RuntimeException.class, () -> taskService.deleteTask(validTask));
+        var exception = assertThrows(RuntimeException.class, () -> taskService.deleteTask(mockTaskModel));
 
         //THEN
         assertEquals("Error: Task not found", exception.getLocalizedMessage());
-        verify(taskRepository, times(1)).delete(validTask);
+        verify(taskRepository, times(1)).delete(mockTaskEntity);
     }
 }

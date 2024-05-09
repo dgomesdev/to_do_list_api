@@ -1,6 +1,7 @@
 package com.dgomesdev.to_do_list_api.controller.dto.response;
 
-import com.dgomesdev.to_do_list_api.domain.model.User;
+import com.dgomesdev.to_do_list_api.domain.model.UserModel;
+import com.dgomesdev.to_do_list_api.data.entity.UserEntity;
 
 import java.util.UUID;
 
@@ -9,13 +10,22 @@ public record UserResponseDto(
         String username,
         String email,
         String password
-) {
-    public UserResponseDto(User user) {
+) implements ResponseDto {
+    public UserResponseDto(UserEntity userEntity) {
         this(
-                user.getId(),
-                user.getUsername(),
-                user.getEmail(),
-                user.getPassword()
+                userEntity.getId(),
+                userEntity.getUsername(),
+                userEntity.getEmail(),
+                userEntity.getPassword()
+        );
+    }
+
+    public UserResponseDto(UserModel userModel) {
+        this(
+                userModel.id(),
+                userModel.username(),
+                userModel.email(),
+                userModel.password()
         );
     }
 }

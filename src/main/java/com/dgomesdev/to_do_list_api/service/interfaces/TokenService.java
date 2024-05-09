@@ -1,4 +1,4 @@
-package com.dgomesdev.to_do_list_api.service;
+package com.dgomesdev.to_do_list_api.service.interfaces;
 
 import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.security.core.userdetails.UserDetails;

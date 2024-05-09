@@ -1,6 +1,8 @@
-package com.dgomesdev.to_do_list_api.domain.model;
+package com.dgomesdev.to_do_list_api.data.entity;
 
 import com.dgomesdev.to_do_list_api.controller.dto.request.UserRequestDto;
+import com.dgomesdev.to_do_list_api.domain.model.UserModel;
+import com.dgomesdev.to_do_list_api.domain.model.UserRole;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -19,7 +21,7 @@ import java.util.UUID;
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
-public class User implements UserDetails {
+public class UserEntity implements UserDetails {
         @Id
         @GeneratedValue(strategy = GenerationType.UUID)
         UUID id;
@@ -33,10 +35,18 @@ public class User implements UserDetails {
         @Enumerated(EnumType.STRING)
         UserRole userRole = UserRole.USER;
 
-        public User(UserRequestDto userRequestDto) {
+        public UserEntity(UserRequestDto userRequestDto) {
                 this.username = userRequestDto.username();
                 this.email = userRequestDto.email();
                 this.password = userRequestDto.password();
+        }
+
+        public UserEntity(UserModel userModel) {
+                this.id = userModel.id();
+                this.username = userModel.username();
+                this.email = userModel.email();
+                this.password = userModel.password();
+                this.userRole = userModel.userRole();
         }
 
         @Override

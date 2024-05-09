@@ -1,6 +1,6 @@
-package com.dgomesdev.to_do_list_api.domain.repository;
+package com.dgomesdev.to_do_list_api.data.repository;
 
-import com.dgomesdev.to_do_list_api.domain.model.User;
+import com.dgomesdev.to_do_list_api.data.entity.UserEntity;
 import com.dgomesdev.to_do_list_api.domain.model.UserRole;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -30,7 +30,7 @@ class UserRepositoryTest {
     void givenValidUsername_whenFindingUserByUsername_thenReturnUser() {
         //GIVEN
         final String username = "username";
-        var user = new User(
+        var user = new UserEntity(
                 UUID.randomUUID(),
                 username,
                 "email",

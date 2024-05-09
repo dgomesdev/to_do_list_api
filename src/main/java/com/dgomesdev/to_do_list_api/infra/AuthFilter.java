@@ -1,6 +1,6 @@
 package com.dgomesdev.to_do_list_api.infra;
 
-import com.dgomesdev.to_do_list_api.domain.model.User;
+import com.dgomesdev.to_do_list_api.domain.model.UserModel;
 import com.dgomesdev.to_do_list_api.service.impl.TokenServiceImpl;
 import com.dgomesdev.to_do_list_api.service.impl.UserServiceImpl;
 import jakarta.servlet.FilterChain;
@@ -36,11 +36,10 @@ public class AuthFilter extends OncePerRequestFilter {
             UserDetails userDetails = userService.loadUserByUsername(username);
             var authentication = new UsernamePasswordAuthenticationToken(userDetails, null, userDetails.getAuthorities());
             SecurityContextHolder.getContext().setAuthentication(authentication);
-            User user = userService.findUserByUsername(username);
-            request.setAttribute("userId", user.getId());
+            UserModel user = userService.findUserByUsername(username);
+            request.setAttribute("userId", user.id());
         } catch (Exception e) {
             System.out.println(e.getLocalizedMessage());
-            response.sendError(403, "Unauthenticated user");
         } finally {
             filterChain.doFilter(request, response);
         }

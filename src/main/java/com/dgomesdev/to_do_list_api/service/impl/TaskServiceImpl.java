@@ -1,10 +1,12 @@
 package com.dgomesdev.to_do_list_api.service.impl;
 
+import com.dgomesdev.to_do_list_api.data.entity.TaskEntity;
+import com.dgomesdev.to_do_list_api.data.repository.TaskRepository;
 import com.dgomesdev.to_do_list_api.domain.exception.TaskNotFoundException;
-import com.dgomesdev.to_do_list_api.domain.model.Task;
-import com.dgomesdev.to_do_list_api.domain.repository.TaskRepository;
-import com.dgomesdev.to_do_list_api.service.TaskService;
+import com.dgomesdev.to_do_list_api.domain.model.TaskModel;
+import com.dgomesdev.to_do_list_api.service.interfaces.TaskService;
 import jakarta.transaction.Transactional;
+import org.springframework.beans.BeanUtils;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -15,49 +17,55 @@ import java.util.UUID;
 public class TaskServiceImpl implements TaskService {
 
     private final TaskRepository taskRepository;
-    private final UserServiceImpl userService;
 
-    public TaskServiceImpl(TaskRepository taskRepository, UserServiceImpl userService) {
+    public TaskServiceImpl(TaskRepository taskRepository) {
         this.taskRepository = taskRepository;
-        this.userService = userService;
     }
 
     @Override
-    public void saveTask(Task task) {
+    public void saveTask(TaskModel taskModel) {
         try {
-            taskRepository.save(task);
+            taskRepository.save(new TaskEntity(taskModel));
         } catch (Exception e) {
             throw new RuntimeException("Invalid task: " + e.getLocalizedMessage());
         }
     }
 
     @Override
-    public Task findTaskById(UUID taskId) {
-        return taskRepository.findById(taskId).orElseThrow(TaskNotFoundException::new);
+    public TaskModel findTaskById(UUID taskId) {
+        var task = taskRepository.findById(taskId).orElseThrow(TaskNotFoundException::new);
+        return new TaskModel(task);
     }
 
     @Override
-    public List<Task> findAllTasksByUserId(UUID userId) {
+    public List<TaskModel> findAllTasksByUserId(UUID userId) {
         try {
-            userService.findUserById(userId);
-            return taskRepository.findTasksByUserId(userId);
+            return taskRepository
+                    .findTasksByUserId(userId)
+                    .stream()
+                    .map(TaskModel::new)
+                    .toList();
         } catch (Exception e) {
             throw new RuntimeException(e.getLocalizedMessage());
         }
     }
 
     @Override
-    public void updateTask(Task updatedTask) {
+    public void updateTask(TaskModel taskModelToBeUpdated, TaskModel updatedTaskModel) {
         try {
-            taskRepository.save(updatedTask);
+            var taskEntityToBeUpdated = new TaskEntity(taskModelToBeUpdated);
+            var updatedTaskEntity = new TaskEntity(updatedTaskModel);
+            BeanUtils.copyProperties(taskEntityToBeUpdated, updatedTaskEntity);
+            taskRepository.save(updatedTaskEntity);
         } catch (Exception e) {
             throw new RuntimeException("Invalid task: " + e.getLocalizedMessage());
         }
     }
 
     @Override
-    public void deleteTask(Task task) {
+    public void deleteTask(TaskModel taskModel) {
         try {
+            var task = new TaskEntity(taskModel);
             taskRepository.delete(task);
         } catch (Exception e) {
             throw new RuntimeException("Error: " + e.getLocalizedMessage());

@@ -1,8 +1,8 @@
-package com.dgomesdev.to_do_list_api.domain.repository;
+package com.dgomesdev.to_do_list_api.data.repository;
 
+import com.dgomesdev.to_do_list_api.data.entity.TaskEntity;
 import com.dgomesdev.to_do_list_api.domain.model.Priority;
 import com.dgomesdev.to_do_list_api.domain.model.Status;
-import com.dgomesdev.to_do_list_api.domain.model.Task;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -31,7 +31,7 @@ class TaskRepositoryTest {
         //GIVEN
         UUID mockUserId = UUID.randomUUID();
         var tasks = List.of(
-                new Task(
+                new TaskEntity(
                         UUID.randomUUID(),
                         "title1",
                         "description1",

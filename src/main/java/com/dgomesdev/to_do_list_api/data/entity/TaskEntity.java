@@ -1,6 +1,9 @@
-package com.dgomesdev.to_do_list_api.domain.model;
+package com.dgomesdev.to_do_list_api.data.entity;
 
 import com.dgomesdev.to_do_list_api.controller.dto.request.TaskRequestDto;
+import com.dgomesdev.to_do_list_api.domain.model.Priority;
+import com.dgomesdev.to_do_list_api.domain.model.Status;
+import com.dgomesdev.to_do_list_api.domain.model.TaskModel;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -14,7 +17,7 @@ import java.util.UUID;
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
-public final class Task {
+public final class TaskEntity {
         @Id
         @GeneratedValue(strategy = GenerationType.UUID)
         private UUID id;
@@ -28,11 +31,20 @@ public final class Task {
         @Column(nullable = false)
         private UUID userId;
 
-        public Task(TaskRequestDto taskRequestDto, UUID userId) {
+        public TaskEntity(TaskRequestDto taskRequestDto, UUID userId) {
                 this.title = taskRequestDto.title();
                 this.description = taskRequestDto.description();
                 this.priority = taskRequestDto.priority();
                 this.status = taskRequestDto.status();
                 this.userId = userId;
+        }
+
+        public TaskEntity(TaskModel taskModel) {
+                this.id = taskModel.id();
+                this.title = taskModel.title();
+                this.description = taskModel.description();
+                this.priority = taskModel.priority();
+                this.status = taskModel.status();
+                this.userId = taskModel.userId();
         }
 }

@@ -4,7 +4,7 @@ import com.auth0.jwt.JWT;
 import com.auth0.jwt.algorithms.Algorithm;
 import com.auth0.jwt.exceptions.JWTCreationException;
 import com.auth0.jwt.exceptions.JWTVerificationException;
-import com.dgomesdev.to_do_list_api.domain.model.User;
+import com.dgomesdev.to_do_list_api.data.entity.UserEntity;
 import com.dgomesdev.to_do_list_api.domain.model.UserRole;
 import jakarta.servlet.http.HttpServletRequest;
 import org.junit.jupiter.api.BeforeEach;
@@ -34,7 +34,7 @@ class TokenServiceImplTest {
 
     private Field secretField;
 
-    private final User user = new User(
+    private final UserEntity userEntity = new UserEntity(
             UUID.randomUUID(),
             "username",
             "email",
@@ -54,7 +54,7 @@ class TokenServiceImplTest {
     void givenValidAttributes_whenGeneratingToken_thenReturnValidToken() {
         // GIVEN
         // WHEN
-        String token = tokenService.generateToken(user);
+        String token = tokenService.generateToken(userEntity);
 
         // THEN
         assertNotNull(token);
@@ -68,7 +68,7 @@ class TokenServiceImplTest {
         secretField.set(tokenService, null);
 
         // WHEN
-        var exception = assertThrows(JWTCreationException.class, () -> tokenService.generateToken(user));
+        var exception = assertThrows(JWTCreationException.class, () -> tokenService.generateToken(userEntity));
 
         // THEN
         assertEquals("Error while generating token: The Secret cannot be null", exception.getLocalizedMessage());
@@ -89,7 +89,7 @@ class TokenServiceImplTest {
     @DisplayName("Should throw exception when username is blank")
     void givenBlankUsername_whenGeneratingToken_thenThrowException() {
         // GIVEN
-        var userWithoutUsername = new User(
+        var userWithoutUsername = new UserEntity(
                 UUID.randomUUID(),
                 "",
                 "email",
