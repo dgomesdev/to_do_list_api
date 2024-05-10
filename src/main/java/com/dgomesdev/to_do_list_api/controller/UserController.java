@@ -66,9 +66,8 @@ public class UserController {
     })
     public ResponseEntity<ResponseDto> updateUser(@PathVariable UUID userId, @RequestBody @Valid UserRequestDto userRequestDto, HttpServletRequest request) {
         try {
-            var userToBeUpdated = userService.findUserById(userId);
-            if (!userToBeUpdated.id().equals(request.getAttribute("userId"))) throw new UnauthorizedUserException();
-            var token = userService.updateUser(userToBeUpdated, new UserModel(userId, userRequestDto, UserRole.USER));
+            if (!userId.equals(request.getAttribute("userId"))) throw new UnauthorizedUserException();
+            var token = userService.updateUser(new UserModel(userId, userRequestDto, UserRole.USER));
             return ResponseEntity
                     .status(HttpStatus.OK)
                     .body(new MessageDto("User updated successfully. New token: " + token));
@@ -101,9 +100,8 @@ public class UserController {
     })
     public ResponseEntity<ResponseDto> deleteUser(@PathVariable UUID userId, HttpServletRequest request) {
         try {
-            var userToBeDeleted = userService.findUserById(userId);
-            if (!userToBeDeleted.id().equals(request.getAttribute("userId"))) throw new UnauthorizedUserException();
-            userService.deleteUser(userToBeDeleted);
+            if (!userId.equals(request.getAttribute("userId"))) throw new UnauthorizedUserException();
+            userService.deleteUser(userId);
             return ResponseEntity
                     .status(HttpStatus.NO_CONTENT)
                     .body(new MessageDto("User deleted successfully"));

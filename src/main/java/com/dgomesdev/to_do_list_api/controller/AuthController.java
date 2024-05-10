@@ -5,7 +5,6 @@ import com.dgomesdev.to_do_list_api.controller.dto.request.UserRequestDto;
 import com.dgomesdev.to_do_list_api.controller.dto.response.MessageDto;
 import com.dgomesdev.to_do_list_api.controller.dto.response.ResponseDto;
 import com.dgomesdev.to_do_list_api.domain.exception.UserNotFoundException;
-import com.dgomesdev.to_do_list_api.data.entity.UserEntity;
 import com.dgomesdev.to_do_list_api.domain.model.UserModel;
 import com.dgomesdev.to_do_list_api.domain.model.UserRole;
 import com.dgomesdev.to_do_list_api.service.impl.TokenServiceImpl;
@@ -58,7 +57,7 @@ public class AuthController {
         } catch (Exception e) {
             return ResponseEntity
                     .status(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .body(new MessageDto("Error while creating user: " + getClass() + " " + e.getLocalizedMessage()));
+                    .body(new MessageDto("Error while creating user: " + e.getLocalizedMessage()));
         }
     }
 

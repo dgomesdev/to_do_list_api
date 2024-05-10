@@ -6,7 +6,6 @@ import com.dgomesdev.to_do_list_api.domain.exception.TaskNotFoundException;
 import com.dgomesdev.to_do_list_api.domain.model.TaskModel;
 import com.dgomesdev.to_do_list_api.service.interfaces.TaskService;
 import jakarta.transaction.Transactional;
-import org.springframework.beans.BeanUtils;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -51,22 +50,23 @@ public class TaskServiceImpl implements TaskService {
     }
 
     @Override
-    public void updateTask(TaskModel taskModelToBeUpdated, TaskModel updatedTaskModel) {
+    public void updateTask(TaskModel updatedTask) {
+        var taskToBeUpdated = taskRepository.findById(updatedTask.id()).orElseThrow(TaskNotFoundException::new);
         try {
-            var taskEntityToBeUpdated = new TaskEntity(taskModelToBeUpdated);
-            var updatedTaskEntity = new TaskEntity(updatedTaskModel);
-            BeanUtils.copyProperties(taskEntityToBeUpdated, updatedTaskEntity);
-            taskRepository.save(updatedTaskEntity);
+            taskToBeUpdated.setTitle(updatedTask.title());
+            taskToBeUpdated.setDescription(updatedTask.description());
+            taskToBeUpdated.setPriority(updatedTask.priority());
+            taskToBeUpdated.setStatus(updatedTask.status());
+            taskRepository.save(taskToBeUpdated);
         } catch (Exception e) {
             throw new RuntimeException("Invalid task: " + e.getLocalizedMessage());
         }
     }
 
     @Override
-    public void deleteTask(TaskModel taskModel) {
+    public void deleteTask(TaskModel taskToBeDeleted) {
         try {
-            var task = new TaskEntity(taskModel);
-            taskRepository.delete(task);
+            taskRepository.delete(new TaskEntity(taskToBeDeleted));
         } catch (Exception e) {
             throw new RuntimeException("Error: " + e.getLocalizedMessage());
         }

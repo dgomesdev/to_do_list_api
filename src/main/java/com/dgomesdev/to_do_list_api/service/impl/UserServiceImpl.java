@@ -1,13 +1,12 @@
 package com.dgomesdev.to_do_list_api.service.impl;
 
-import com.dgomesdev.to_do_list_api.domain.exception.UserAlreadyExistsException;
-import com.dgomesdev.to_do_list_api.domain.exception.UserNotFoundException;
 import com.dgomesdev.to_do_list_api.data.entity.UserEntity;
 import com.dgomesdev.to_do_list_api.data.repository.UserRepository;
+import com.dgomesdev.to_do_list_api.domain.exception.UserAlreadyExistsException;
+import com.dgomesdev.to_do_list_api.domain.exception.UserNotFoundException;
 import com.dgomesdev.to_do_list_api.domain.model.UserModel;
 import com.dgomesdev.to_do_list_api.service.interfaces.UserService;
 import jakarta.transaction.Transactional;
-import org.springframework.beans.BeanUtils;
 import org.springframework.security.core.userdetails.User;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
@@ -57,33 +56,39 @@ public class UserServiceImpl implements UserService, UserDetailsService {
     }
 
     @Override
-    public String updateUser(UserModel userModelToBeUpdated, UserModel updatedUserModel) {
+    public String updateUser(UserModel updatedUser) {
+        var userToBeUpdated = userRepository.findById(updatedUser.id()).orElseThrow(UserNotFoundException::new);
         try {
-            var userToBeUpdatedEntity = new UserEntity(userModelToBeUpdated);
-            var updatedUserEntity = new UserEntity(updatedUserModel);
-            BeanUtils.copyProperties(userToBeUpdatedEntity, updatedUserEntity);
-            String encryptedPassword = new BCryptPasswordEncoder().encode(updatedUserEntity.getPassword());
-            updatedUserEntity.setPassword(encryptedPassword);
-            userRepository.save(updatedUserEntity);
-            return tokenService.generateToken(updatedUserEntity);
+            String encryptedPassword = new BCryptPasswordEncoder().encode(updatedUser.password());
+            userToBeUpdated.setUsername(updatedUser.username());
+            userToBeUpdated.setPassword(encryptedPassword);
+            userToBeUpdated.setEmail(updatedUser.email());
+            userToBeUpdated.setUserRole(updatedUser.userRole());
+            userRepository.save(userToBeUpdated);
+            return tokenService.generateToken(userToBeUpdated);
         } catch (Exception e) {
             throw new RuntimeException("Invalid user: " + e.getLocalizedMessage());
         }
     }
 
     @Override
-    public void deleteUser(UserModel userModel) {
-        try {
-            userRepository.delete(new UserEntity(userModel));
-        } catch (Exception e) {
-            throw new RuntimeException("Error: " + e.getLocalizedMessage());
-        }
+    public void deleteUser(UUID userId) {
+            userRepository.delete(
+                    userRepository.findById(userId).orElseThrow(UserNotFoundException::new)
+            );
     }
 
     @Override
     public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
         UserEntity foundUserEntity = userRepository.findUserByUsername(username)
                 .orElseThrow(() -> new UsernameNotFoundException("Username " + username + " not found"));
-        return new User(foundUserEntity.getUsername(), foundUserEntity.getPassword(), true, true, true, true, foundUserEntity.getAuthorities());
+        return new User(
+                foundUserEntity.getUsername(),
+                foundUserEntity.getPassword(),
+                true,
+                true,
+                true,
+                true,
+                foundUserEntity.getAuthorities());
     }
 }

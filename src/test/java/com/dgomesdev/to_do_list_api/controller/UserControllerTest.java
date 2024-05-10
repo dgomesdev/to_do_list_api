@@ -5,7 +5,6 @@ import com.dgomesdev.to_do_list_api.controller.dto.response.MessageDto;
 import com.dgomesdev.to_do_list_api.domain.exception.UserNotFoundException;
 import com.dgomesdev.to_do_list_api.domain.model.UserModel;
 import com.dgomesdev.to_do_list_api.domain.model.UserRole;
-import com.dgomesdev.to_do_list_api.service.impl.TokenServiceImpl;
 import com.dgomesdev.to_do_list_api.service.impl.UserServiceImpl;
 import jakarta.servlet.http.HttpServletRequest;
 import org.junit.jupiter.api.BeforeEach;
@@ -28,9 +27,6 @@ class UserControllerTest {
 
     @Mock
     private UserServiceImpl userService;
-
-    @Mock
-    private TokenServiceImpl tokenService;
 
     @Mock
     HttpServletRequest mockRequest;
@@ -102,9 +98,7 @@ class UserControllerTest {
     void givenUser_whenUpdatingUser_thenReturnResponseOk() {
         //GIVEN
         when(mockRequest.getAttribute("userId")).thenReturn(mockUserId);
-        when(userService.findUserById(any())).thenReturn(mockUserModel);
-        doNothing().when(userService).updateUser(any(), any());
-        when(tokenService.generateToken(any())).thenReturn("ok");
+        when(userService.updateUser(any())).thenReturn("Valid token");
 
         //WHEN
         var responseOk = userController.updateUser(mockUserId, mockUserRequestDto, mockRequest);
@@ -135,7 +129,7 @@ class UserControllerTest {
     void givenNonExistentUser_whenUpdatingUser_thenReturnResponseNotFound() {
         //GIVEN
         when(mockRequest.getAttribute("userId")).thenReturn(mockUserId);
-        when(userService.findUserById(any())).thenThrow(new UserNotFoundException());
+        when(userService.updateUser(mockUserModel)).thenThrow(new UserNotFoundException());
 
         //WHEN
         var responseNotFound = userController.updateUser(mockUserId, mockUserRequestDto, mockRequest);
@@ -150,8 +144,7 @@ class UserControllerTest {
     void givenNonInvalidUser_whenUpdatingUser_thenReturnResponseBadRequest() {
         //GIVEN
         when(mockRequest.getAttribute("userId")).thenReturn(mockUserId);
-        when(userService.findUserById(any())).thenReturn(mockUserModel);
-        doThrow(new IllegalArgumentException()).when(userService).updateUser(any(), any());
+        when(userService.updateUser(mockUserModel)).thenThrow(new IllegalArgumentException());
 
         //WHEN
         var responseBadRequest = userController.updateUser(mockUserId, mockUserRequestDto, mockRequest);
@@ -165,8 +158,7 @@ class UserControllerTest {
     void givenInvalidUser_whenUpdatingUser_thenReturnResponseError() {
         //GIVEN
         when(mockRequest.getAttribute("userId")).thenReturn(mockUserId);
-        when(userService.findUserById(any())).thenReturn(mockUserModel);
-        doThrow(new RuntimeException()).when(userService).updateUser(any(), any());
+        when(userService.updateUser(mockUserModel)).thenThrow(new RuntimeException());
 
         //WHEN
         var responseError = userController.updateUser(mockUserId, mockUserRequestDto, mockRequest);
@@ -174,7 +166,8 @@ class UserControllerTest {
         //THEN
         assertEquals(HttpStatus.INTERNAL_SERVER_ERROR, responseError.getStatusCode());
         assertNotNull(responseError.getBody());
-//        assertTrue(responseError.getBody().contains("Error while updating the user"));
+        var message = responseError.getBody().toString();
+        assertTrue(message.contains("Error while updating the user"));
     }
 
     @Test
@@ -182,7 +175,7 @@ class UserControllerTest {
      void givenUserId_whenDeletingUser_thenReturnResponseNoContent() {
         //GIVEN
         when(mockRequest.getAttribute("userId")).thenReturn(mockUserId);
-        doNothing().when(userService).deleteUser(mockUserModel);
+        doNothing().when(userService).deleteUser(any());
 
         //WHEN
         var responseNoContent = userController.deleteUser(mockUserId, mockRequest);
@@ -211,7 +204,7 @@ class UserControllerTest {
      void givenNonExistentUser_whenDeletingUser_thenReturnResponseNotFound() {
         //GIVEN
         when(mockRequest.getAttribute("userId")).thenReturn(mockUserId);
-        doThrow(new UserNotFoundException()).when(userService).deleteUser(mockUserModel);
+        doThrow(new UserNotFoundException()).when(userService).deleteUser(any());
 
         //WHEN
         var responseNotFound = userController.deleteUser(mockUserId, mockRequest);
@@ -226,7 +219,7 @@ class UserControllerTest {
      void givenUserId_whenDeletingUser_thenReturnResponseError() {
         //GIVEN
         when(mockRequest.getAttribute("userId")).thenReturn(mockUserId);
-        doThrow(new RuntimeException()).when(userService).deleteUser(mockUserModel);
+        doThrow(new RuntimeException()).when(userService).deleteUser(any());
 
         //WHEN
         var responseError = userController.deleteUser(mockUserId, mockRequest);
@@ -234,6 +227,7 @@ class UserControllerTest {
         //THEN
         assertEquals(HttpStatus.INTERNAL_SERVER_ERROR, responseError.getStatusCode());
         assertNotNull(responseError.getBody());
-//        assertTrue(responseError.getBody().contains("Error while deleting the user"));
+        var message = responseError.getBody().toString();
+        assertTrue(message.contains("Error while deleting the user"));
     }
 }

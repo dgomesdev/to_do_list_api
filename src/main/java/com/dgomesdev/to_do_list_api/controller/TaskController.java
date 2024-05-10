@@ -17,7 +17,6 @@ import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
-import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -79,7 +78,7 @@ public class TaskController {
     ) {
         try {
             var foundTask = taskService.findTaskById(taskId);
-            if (!foundTask.id().equals(request.getAttribute("userId"))) throw new UnauthorizedUserException();
+            if (!foundTask.userId().equals(request.getAttribute("userId"))) throw new UnauthorizedUserException();
             return ResponseEntity
                     .status(HttpStatus.OK)
                     .body(new TaskResponseDto(foundTask));
@@ -146,8 +145,8 @@ public class TaskController {
         try {
             var taskModelToBeUpdated = taskService.findTaskById(taskId);
             var userId = (UUID) request.getAttribute("userId");
-            if (!taskModelToBeUpdated.id().equals(userId)) throw new UnauthorizedUserException();
-            taskService.updateTask(taskModelToBeUpdated, new TaskModel(taskId, taskRequestDto, userId));
+            if (!taskModelToBeUpdated.userId().equals(userId)) throw new UnauthorizedUserException();
+            taskService.updateTask(new TaskModel(taskId, taskRequestDto, userId));
             return ResponseEntity
                     .status(HttpStatus.OK)
                     .body(new MessageDto("Task updated successfully"));
@@ -180,7 +179,7 @@ public class TaskController {
     ) {
         try {
             var taskToBeDeleted = taskService.findTaskById(taskId);
-            if (!taskToBeDeleted.id().equals(request.getAttribute("userId"))) throw new UnauthorizedUserException();
+            if (!taskToBeDeleted.userId().equals(request.getAttribute("userId"))) throw new UnauthorizedUserException();
             taskService.deleteTask(taskToBeDeleted);
             return ResponseEntity
                     .status(HttpStatus.NO_CONTENT)

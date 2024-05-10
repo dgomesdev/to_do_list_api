@@ -1,6 +1,5 @@
 package com.dgomesdev.to_do_list_api.data.entity;
 
-import com.dgomesdev.to_do_list_api.controller.dto.request.TaskRequestDto;
 import com.dgomesdev.to_do_list_api.domain.model.Priority;
 import com.dgomesdev.to_do_list_api.domain.model.Status;
 import com.dgomesdev.to_do_list_api.domain.model.TaskModel;
@@ -30,14 +29,6 @@ public final class TaskEntity {
         private Status status = Status.TO_BE_DONE;
         @Column(nullable = false)
         private UUID userId;
-
-        public TaskEntity(TaskRequestDto taskRequestDto, UUID userId) {
-                this.title = taskRequestDto.title();
-                this.description = taskRequestDto.description();
-                this.priority = taskRequestDto.priority();
-                this.status = taskRequestDto.status();
-                this.userId = userId;
-        }
 
         public TaskEntity(TaskModel taskModel) {
                 this.id = taskModel.id();

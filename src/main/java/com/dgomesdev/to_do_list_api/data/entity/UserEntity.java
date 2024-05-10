@@ -1,6 +1,5 @@
 package com.dgomesdev.to_do_list_api.data.entity;
 
-import com.dgomesdev.to_do_list_api.controller.dto.request.UserRequestDto;
 import com.dgomesdev.to_do_list_api.domain.model.UserModel;
 import com.dgomesdev.to_do_list_api.domain.model.UserRole;
 import jakarta.persistence.*;
@@ -34,12 +33,6 @@ public class UserEntity implements UserDetails {
         @Column(nullable = false)
         @Enumerated(EnumType.STRING)
         UserRole userRole = UserRole.USER;
-
-        public UserEntity(UserRequestDto userRequestDto) {
-                this.username = userRequestDto.username();
-                this.email = userRequestDto.email();
-                this.password = userRequestDto.password();
-        }
 
         public UserEntity(UserModel userModel) {
                 this.id = userModel.id();

@@ -10,6 +10,6 @@ public interface TaskService {
     void saveTask(TaskModel taskModel);
     TaskModel findTaskById(UUID taskId);
     List<TaskModel> findAllTasksByUserId(UUID userId);
-    void updateTask(TaskModel taskModelToBeUpdated, TaskModel updatedTaskModel);
-    void deleteTask(TaskModel taskModel);
+    void updateTask(TaskModel updatedTaskModel);
+    void deleteTask(TaskModel taskToBeDeleted);
 }

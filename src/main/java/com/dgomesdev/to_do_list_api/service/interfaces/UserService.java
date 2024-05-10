@@ -9,6 +9,6 @@ public interface UserService {
     void saveUser(UserModel userModel);
     UserModel findUserById(UUID userId);
     UserModel findUserByUsername(String username);
-    String updateUser(UserModel userToBeUpdated, UserModel updatedUser);
-    void deleteUser(UserModel userModel);
+    String updateUser(UserModel updatedUser);
+    void deleteUser(UUID userId);
 }

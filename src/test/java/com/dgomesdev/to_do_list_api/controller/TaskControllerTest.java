@@ -1,6 +1,7 @@
 package com.dgomesdev.to_do_list_api.controller;
 
 import com.dgomesdev.to_do_list_api.controller.dto.request.TaskRequestDto;
+import com.dgomesdev.to_do_list_api.controller.dto.response.MessageDto;
 import com.dgomesdev.to_do_list_api.domain.exception.TaskNotFoundException;
 import com.dgomesdev.to_do_list_api.domain.exception.UserNotFoundException;
 import com.dgomesdev.to_do_list_api.domain.model.*;
@@ -76,8 +77,8 @@ class TaskControllerTest {
         //THEN
         assertNotNull(responseOk.getBody());
         assertEquals(HttpStatus.CREATED, responseOk.getStatusCode());
-//        assertEquals("Task created successfully", responseOk.getBody());
-//        verify(taskService, times(1)).saveTask(any(TaskEntity.class));
+        assertEquals(new MessageDto("Task created successfully"), responseOk.getBody());
+        verify(taskService, times(1)).saveTask(any(TaskModel.class));
     }
 
     @Test
@@ -92,8 +93,8 @@ class TaskControllerTest {
         //THEN
         assertNotNull(responseUnauthorized.getBody());
         assertEquals(HttpStatus.UNAUTHORIZED, responseUnauthorized.getStatusCode());
-//        assertEquals("Unauthorized user", responseUnauthorized.getBody());
-//        verify(taskService, times(0)).saveTask(any(TaskEntity.class));
+        assertEquals(new MessageDto("Unauthorized user"), responseUnauthorized.getBody());
+        verify(taskService, times(0)).saveTask(any(TaskModel.class));
     }
 
     @Test
@@ -107,17 +108,18 @@ class TaskControllerTest {
         var responseError= taskController.saveTask(mockTaskRequestDto, mockRequest);
 
         //THEN
-        assertNotNull(responseError.getBody());
         assertEquals(HttpStatus.INTERNAL_SERVER_ERROR, responseError.getStatusCode());
-//        assertTrue(responseError.getBody().contains("Error while saving the task"));
-//        verify(taskService, times(1)).saveTask(any(TaskEntity.class));
+        assertNotNull(responseError.getBody());
+        var message = responseError.getBody().toString();
+        assertTrue(message.contains("Error while saving the task"));
+        verify(taskService, times(1)).saveTask(any(TaskModel.class));
     }
 
     @Test
     @DisplayName("Should find a task by Id successfully")
     void givenTaskId_whenFindingTaskById_thenReturnResponseOk() {
         //GIVEN
-        when(taskService.findTaskById(any())).thenReturn(mockTaskModel);
+        when(taskService.findTaskById(mockTaskId)).thenReturn(mockTaskModel);
         when(mockRequest.getAttribute("userId")).thenReturn(mockUserId);
 
         //WHEN
@@ -142,7 +144,7 @@ class TaskControllerTest {
         //THEN
         assertNotNull(responseUnauthorized.getBody());
         assertEquals(HttpStatus.UNAUTHORIZED, responseUnauthorized.getStatusCode());
-//        assertEquals("Unauthorized user", responseUnauthorized.getBody());
+        assertEquals(new MessageDto("Unauthorized user"), responseUnauthorized.getBody());
     }
 
     @Test
@@ -157,7 +159,7 @@ class TaskControllerTest {
         //THEN
         assertNotNull(responseNotFound.getBody());
         assertEquals(HttpStatus.NOT_FOUND, responseNotFound.getStatusCode());
-//        assertEquals("Task not found", responseNotFound.getBody());
+        assertEquals(new MessageDto("Task not found"), responseNotFound.getBody());
         verify(taskService, times(1)).findTaskById(any(UUID.class));
     }
 
@@ -207,7 +209,7 @@ class TaskControllerTest {
         // THEN
         assertNotNull(responseUnauthorized.getBody());
         assertEquals(HttpStatus.UNAUTHORIZED, responseUnauthorized.getStatusCode());
-//        assertEquals("Unauthorized user", responseUnauthorized.getBody());
+        assertEquals(new MessageDto("Unauthorized user"), responseUnauthorized.getBody());
     }
 
     @Test
@@ -233,15 +235,14 @@ class TaskControllerTest {
         //GIVEN
         when(taskService.findTaskById(mockTaskId)).thenReturn(mockTaskModel);
         when(mockRequest.getAttribute("userId")).thenReturn(mockUserId);
-        doNothing().when(taskService).updateTask(any(), any());
+        doNothing().when(taskService).updateTask(any());
 
         //WHEN
         var responseOk = taskController.updateTask(mockTaskId, mockTaskRequestDto, mockRequest);
 
         //THEN
-        assertNotNull(responseOk);
         assertEquals(HttpStatus.OK, responseOk.getStatusCode());
-//        assertEquals("Task updated successfully", responseOk.getBody());
+        assertEquals(new MessageDto("Task updated successfully"), responseOk.getBody());
     }
 
     @Test
@@ -255,9 +256,8 @@ class TaskControllerTest {
         var responseUnauthorized = taskController.updateTask(mockTaskId, mockTaskRequestDto, mockRequest);
 
         //THEN
-        assertNotNull(responseUnauthorized.getBody());
         assertEquals(HttpStatus.UNAUTHORIZED, responseUnauthorized.getStatusCode());
-//        assertEquals("Unauthorized user", responseUnauthorized.getBody());
+        assertEquals(new MessageDto("Unauthorized user"), responseUnauthorized.getBody());
     }
 
     @Test
@@ -270,9 +270,8 @@ class TaskControllerTest {
         var responseNotFound = taskController.updateTask(mockTaskId, mockTaskRequestDto, mockRequest);
 
         //THEN
-        assertNotNull(responseNotFound.getBody());
         assertEquals(HttpStatus.NOT_FOUND, responseNotFound.getStatusCode());
-//        assertEquals("Task not found", responseNotFound.getBody());
+        assertEquals(new MessageDto("Task not found"), responseNotFound.getBody());
     }
 
     @Test
@@ -281,7 +280,7 @@ class TaskControllerTest {
         //GIVEN
         when(taskService.findTaskById(mockTaskId)).thenReturn(mockTaskModel);
         when(mockRequest.getAttribute("userId")).thenReturn(mockUserId);
-        doThrow(RuntimeException.class).when(taskService).updateTask(any(), any());
+        doThrow(RuntimeException.class).when(taskService).updateTask(any());
 
         //WHEN
         var responseError = taskController.updateTask(mockTaskId, mockTaskRequestDto, mockRequest);
@@ -289,7 +288,7 @@ class TaskControllerTest {
         //THEN
         assertNotNull(responseError.getBody());
         assertEquals(HttpStatus.INTERNAL_SERVER_ERROR, responseError.getStatusCode());
-//        assertTrue(responseError.getBody().contains("Error while updating the task"));
+        assertTrue(responseError.getBody().toString().contains("Error while updating the task"));
     }
 
     @Test
@@ -305,7 +304,7 @@ class TaskControllerTest {
         //THEN
         assertNotNull(responseNoContent.getBody());
         assertEquals(HttpStatus.NO_CONTENT, responseNoContent.getStatusCode());
-//        assertEquals("Task deleted successfully", responseNoContent.getBody());
+        assertEquals(new MessageDto("Task deleted successfully"), responseNoContent.getBody());
     }
 
     @Test
@@ -319,9 +318,8 @@ class TaskControllerTest {
         var responseUnauthorized = taskController.deleteTask(mockTaskId, mockRequest);
 
         //THEN
-        assertNotNull(responseUnauthorized.getBody());
         assertEquals(HttpStatus.UNAUTHORIZED, responseUnauthorized.getStatusCode());
-//        assertEquals("Unauthorized user", responseUnauthorized.getBody());
+        assertEquals(new MessageDto("Unauthorized user"), responseUnauthorized.getBody());
     }
 
     @Test
@@ -334,9 +332,8 @@ class TaskControllerTest {
         var responseNotFound = taskController.deleteTask(mockUserId, mockRequest);
 
         //THEN
-        assertNotNull(responseNotFound.getBody());
         assertEquals(HttpStatus.NOT_FOUND, responseNotFound.getStatusCode());
-//        assertEquals("Task not found", responseNotFound.getBody());
+        assertEquals(new MessageDto("Task not found"), responseNotFound.getBody());
     }
 
     @Test
@@ -353,6 +350,6 @@ class TaskControllerTest {
         //THEN
         assertNotNull(responseError.getBody());
         assertEquals(HttpStatus.INTERNAL_SERVER_ERROR, responseError.getStatusCode());
-//        assertTrue(responseError.getBody().contains("Error while deleting the task"));
+        assertTrue(responseError.getBody().toString().contains("Error while deleting the task"));
     }
 }

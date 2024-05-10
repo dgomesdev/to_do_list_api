@@ -16,7 +16,6 @@ import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import java.util.Optional;
 import java.util.UUID;
 
-import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
@@ -26,6 +25,9 @@ class UserServiceImplTest {
 
     @Mock
     private UserRepository userRepository;
+
+    @Mock
+    private TokenServiceImpl tokenService;
 
     @InjectMocks
     private UserServiceImpl userService;
@@ -40,18 +42,20 @@ class UserServiceImplTest {
 
     private final UserEntity mockUserEntity = new UserEntity(mockUserModel);
 
+    final UserModel invalidUser = new UserModel(mockUserModel.id(), null, null, null, null);
+
     @Test
     @DisplayName("Should save user successfully")
     void givenValidUser_whenSavingUser_ThenReturnSavedUser() {
         //GIVEN
         when(userRepository.existsByUsername(mockUserModel.username())).thenReturn(false);
-        when(userRepository.save(mockUserEntity)).thenReturn(mockUserEntity);
+        when(userRepository.save(any())).thenReturn(mockUserEntity);
 
         //WHEN
         userService.saveUser(mockUserModel);
 
         //THEN
-        verify(userRepository, times(1)).save(mockUserEntity);
+        verify(userRepository, times(1)).save(any());
     }
 
     @Test
@@ -61,7 +65,7 @@ class UserServiceImplTest {
         when(userRepository.existsByUsername(mockUserModel.username())).thenReturn(true);
 
         //WHEN
-        Exception exception = assertThrows(Exception.class, () -> userService.saveUser(mockUserModel));
+        final Exception exception = assertThrows(Exception.class, () -> userService.saveUser(mockUserModel));
 
         // THEN
         assertEquals("Invalid user: User already exists", exception.getLocalizedMessage());
@@ -71,12 +75,12 @@ class UserServiceImplTest {
     @DisplayName("Should throw an exception when trying to save an invalid user")
     void givenInvalidUser_whenSavingUser_thenThrowException() {
         //GIVEN
-
         //WHEN
-        Exception exception = assertThrows(Exception.class, () -> userService.saveUser(mockUserModel));
+        final Exception exception = assertThrows(Exception.class, () -> userService.saveUser(invalidUser));
 
         // THEN
         assertTrue(exception.getLocalizedMessage().contains("Invalid user"));
+        System.out.println(exception.getLocalizedMessage());
     }
 
     @Test
@@ -84,13 +88,13 @@ class UserServiceImplTest {
     void givenValidUserId_whenFindUserByUserId_theReturnUser() {
         //GIVEN
         final UUID validUserId = mockUserModel.id();
-        when(userRepository.findById(validUserId)).thenReturn(Optional.of(new UserEntity(mockUserModel)));
+        when(userRepository.findById(validUserId)).thenReturn(Optional.of(mockUserEntity));
 
         //WHEN
-        var foundUser = userService.findUserById(validUserId);
+        final var foundUser = userService.findUserById(validUserId);
 
         //THEN
-        assertThat(foundUser).isEqualTo(mockUserModel);
+        assertEquals(mockUserModel, foundUser);
         verify(userRepository, times(1)).findById(validUserId);
     }
 
@@ -102,7 +106,7 @@ class UserServiceImplTest {
         when(userRepository.findById(fakeUserId)).thenReturn(Optional.empty());
 
         //WHEN
-        Exception exception = assertThrows(UserNotFoundException.class, () -> userService.findUserById(fakeUserId));
+        final Exception exception = assertThrows(UserNotFoundException.class, () -> userService.findUserById(fakeUserId));
 
         //THEN
         assertEquals("User not found", exception.getLocalizedMessage());
@@ -113,13 +117,13 @@ class UserServiceImplTest {
     void givenValidUserId_whenFindUserByUsername_theReturnUser() {
         //GIVEN
         final String validUsername = mockUserModel.username();
-        when(userRepository.findUserByUsername(validUsername)).thenReturn(Optional.of(new UserEntity(mockUserModel)));
+        when(userRepository.findUserByUsername(validUsername)).thenReturn(Optional.of(mockUserEntity));
 
         //WHEN
-        var foundUser = userService.findUserByUsername(validUsername);
+        final var foundUser = userService.findUserByUsername(validUsername);
 
         //THEN
-        assertThat(foundUser).isEqualTo(mockUserModel);
+        assertEquals(mockUserModel, foundUser);
         verify(userRepository, times(1)).findUserByUsername(validUsername);
     }
 
@@ -131,7 +135,7 @@ class UserServiceImplTest {
         when(userRepository.findUserByUsername(invalidUsername)).thenReturn(Optional.empty());
 
         //WHEN
-        Exception exception = assertThrows(UserNotFoundException.class, () -> userService.findUserByUsername(invalidUsername));
+        final Exception exception = assertThrows(UserNotFoundException.class, () -> userService.findUserByUsername(invalidUsername));
 
         //THEN
         assertEquals("User not found", exception.getLocalizedMessage());
@@ -141,50 +145,53 @@ class UserServiceImplTest {
     @DisplayName("Should update user successfully")
     void givenValidUser_whenUpdatingUser_ThenReturnUpdatedUser() {
         //GIVEN
-        when(userRepository.save(any())).thenReturn(mockUserModel);
+        when(userRepository.findById(mockUserModel.id())).thenReturn(Optional.of(mockUserEntity));
+        when(userRepository.save(any())).thenReturn(mockUserEntity);
+        when(tokenService.generateToken(any())).thenReturn("Valid token");
 
         //WHEN
-        userService.updateUser(mockUserModel, mockUserModel);
+        final var token = userService.updateUser(mockUserModel);
 
         //THEN
-        //verify(userRepository, times(1)).save(mockUserModel);
+        verify(userRepository, times(1)).save(any());
+        assertEquals("Valid token", token);
     }
 
     @Test
     @DisplayName("Should throw an exception when trying to update an user")
     void givenInvalidUser_whenUpdatingUser_thenThrowException() {
         //GIVEN
+        when(userRepository.findById(mockUserModel.id())).thenReturn(Optional.of(mockUserEntity));
 
         //WHEN
-        Exception exception = assertThrows(Exception.class, () -> userService.updateUser(mockUserModel, mockUserModel));
+        final Exception exception = assertThrows(Exception.class, () -> userService.updateUser(invalidUser));
 
         // THEN
         assertTrue(exception.getLocalizedMessage().contains("Invalid user"));
+        System.out.println(exception.getLocalizedMessage());
     }
 
     @Test
     @DisplayName("Should delete user successfully")
     void givenValidUserId_whenDeletingUser_thenDeleteUserSuccessfully() {
         //GIVEN
-        final UUID fakeUserId = mockUserModel.id();
-        when(userRepository.findById(fakeUserId)).thenReturn(Optional.of(new UserEntity(mockUserModel)));
+        when(userRepository.findById(mockUserEntity.getId())).thenReturn(Optional.of(mockUserEntity));
 
         //WHEN
-        userService.deleteUser(mockUserModel);
+        userService.deleteUser(mockUserEntity.getId());
 
         //THEN
-        //verify(userRepository, times(1)).delete(mockUserModel);
+        verify(userRepository, times(1)).delete(mockUserEntity);
     }
 
     @Test
     @DisplayName("Should throw an exception when trying to delete an user")
     void givenInvalidUserId_whenDeletingUser_thenThrowException() {
         //GIVEN
-        final UUID invalidUserId = UUID.randomUUID();
-        when(userRepository.findById(invalidUserId)).thenReturn(Optional.empty());
+        when(userRepository.findById(mockUserEntity.getId())).thenReturn(Optional.empty());
 
         //WHEN
-        Exception exception = assertThrows(UserNotFoundException.class, () -> userService.deleteUser(mockUserModel));
+        Exception exception = assertThrows(UserNotFoundException.class, () -> userService.deleteUser(mockUserModel.id()));
 
         //THEN
         assertEquals("User not found", exception.getLocalizedMessage());
@@ -216,6 +223,6 @@ class UserServiceImplTest {
         Exception exception = assertThrows(UsernameNotFoundException.class, () -> userService.loadUserByUsername(invalidUsername));
 
         //THEN
-        assertEquals("Username not found", exception.getLocalizedMessage());
+        assertEquals("Username  not found", exception.getLocalizedMessage());
     }
 }
