@@ -9,8 +9,8 @@ import com.dgomesdev.to_do_list_api.domain.exception.TaskNotFoundException;
 import com.dgomesdev.to_do_list_api.domain.exception.UnauthorizedUserException;
 import com.dgomesdev.to_do_list_api.domain.exception.UserNotFoundException;
 import com.dgomesdev.to_do_list_api.domain.model.TaskModel;
-import com.dgomesdev.to_do_list_api.service.impl.TaskServiceImpl;
-import com.dgomesdev.to_do_list_api.service.impl.UserServiceImpl;
+import com.dgomesdev.to_do_list_api.service.interfaces.TaskService;
+import com.dgomesdev.to_do_list_api.service.interfaces.UserService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
@@ -31,10 +31,10 @@ import java.util.UUID;
 public class TaskController {
 
     @Autowired
-    private TaskServiceImpl taskService;
+    private TaskService taskService;
 
     @Autowired
-    private UserServiceImpl userService;
+    private UserService userService;
 
     @PostMapping
     @Operation(summary = "Save task", description = "Create a task")

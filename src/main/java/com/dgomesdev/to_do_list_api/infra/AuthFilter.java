@@ -1,7 +1,7 @@
 package com.dgomesdev.to_do_list_api.infra;
 
 import com.dgomesdev.to_do_list_api.domain.model.UserModel;
-import com.dgomesdev.to_do_list_api.service.impl.TokenServiceImpl;
+import com.dgomesdev.to_do_list_api.service.interfaces.TokenService;
 import com.dgomesdev.to_do_list_api.service.impl.UserServiceImpl;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
@@ -23,7 +23,7 @@ public class AuthFilter extends OncePerRequestFilter {
     @Autowired
     private UserServiceImpl userService;
     @Autowired
-    private TokenServiceImpl tokenService;
+    private TokenService tokenService;
 
     @Override
     protected void doFilterInternal(

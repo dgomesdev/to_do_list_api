@@ -7,8 +7,8 @@ import com.dgomesdev.to_do_list_api.controller.dto.response.ResponseDto;
 import com.dgomesdev.to_do_list_api.domain.exception.UserNotFoundException;
 import com.dgomesdev.to_do_list_api.domain.model.UserModel;
 import com.dgomesdev.to_do_list_api.domain.model.UserRole;
-import com.dgomesdev.to_do_list_api.service.impl.TokenServiceImpl;
-import com.dgomesdev.to_do_list_api.service.impl.UserServiceImpl;
+import com.dgomesdev.to_do_list_api.service.interfaces.TokenService;
+import com.dgomesdev.to_do_list_api.service.interfaces.UserService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
@@ -31,9 +31,9 @@ import java.util.UUID;
 public class AuthController {
 
     @Autowired
-    private UserServiceImpl userService;
+    private UserService userService;
     @Autowired
-    private TokenServiceImpl tokenService;
+    private TokenService tokenService;
     @Autowired
     private AuthenticationManager authenticationManager;
 
