@@ -70,10 +70,10 @@ public class AuthController {
     })
     public ResponseEntity<ResponseDto> login(@RequestBody @Valid AuthRequestDto authRequestDto) {
         try {
-            userService.findUserByUsername(authRequestDto.username());
+            var user = userService.findUserByUsername(authRequestDto.username());
             var usernamePassword = new UsernamePasswordAuthenticationToken(authRequestDto.username(), authRequestDto.password());
             var auth = authenticationManager.authenticate(usernamePassword);
-            var token = tokenService.generateToken((UserDetails) auth.getPrincipal());
+            var token = tokenService.generateToken((UserDetails) auth.getPrincipal(), user.id());
             return ResponseEntity
                     .status(HttpStatus.OK)
                     .body(new MessageDto("Login successful for user " + authRequestDto.username() + " with token " + token));

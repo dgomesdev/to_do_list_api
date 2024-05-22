@@ -5,6 +5,7 @@ import com.dgomesdev.to_do_list_api.data.repository.UserRepository;
 import com.dgomesdev.to_do_list_api.domain.exception.UserAlreadyExistsException;
 import com.dgomesdev.to_do_list_api.domain.exception.UserNotFoundException;
 import com.dgomesdev.to_do_list_api.domain.model.UserModel;
+import com.dgomesdev.to_do_list_api.service.interfaces.TokenService;
 import com.dgomesdev.to_do_list_api.service.interfaces.UserService;
 import jakarta.transaction.Transactional;
 import org.springframework.security.core.userdetails.User;
@@ -21,9 +22,9 @@ import java.util.UUID;
 public class UserServiceImpl implements UserService, UserDetailsService {
 
     private final UserRepository userRepository;
-    private final TokenServiceImpl tokenService;
+    private final TokenService tokenService;
 
-    public UserServiceImpl(UserRepository userRepository, TokenServiceImpl tokenService) {
+    public UserServiceImpl(UserRepository userRepository, TokenService tokenService) {
         this.userRepository = userRepository;
         this.tokenService = tokenService;
     }
@@ -64,8 +65,8 @@ public class UserServiceImpl implements UserService, UserDetailsService {
             userToBeUpdated.setPassword(encryptedPassword);
             userToBeUpdated.setEmail(updatedUser.email());
             userToBeUpdated.setUserRole(updatedUser.userRole());
-            userRepository.save(userToBeUpdated);
-            return tokenService.generateToken(userToBeUpdated);
+            var newUser = userRepository.save(userToBeUpdated);
+            return tokenService.generateToken(newUser, newUser.getId());
         } catch (Exception e) {
             throw new RuntimeException("Invalid user: " + e.getLocalizedMessage());
         }
@@ -73,9 +74,9 @@ public class UserServiceImpl implements UserService, UserDetailsService {
 
     @Override
     public void deleteUser(UUID userId) {
-            userRepository.delete(
-                    userRepository.findById(userId).orElseThrow(UserNotFoundException::new)
-            );
+        userRepository.delete(
+                userRepository.findById(userId).orElseThrow(UserNotFoundException::new)
+        );
     }
 
     @Override

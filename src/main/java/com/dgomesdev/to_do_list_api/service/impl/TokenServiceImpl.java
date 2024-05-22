@@ -6,6 +6,7 @@ import com.auth0.jwt.exceptions.JWTCreationException;
 import com.auth0.jwt.exceptions.JWTVerificationException;
 import com.dgomesdev.to_do_list_api.service.interfaces.TokenService;
 import jakarta.servlet.http.HttpServletRequest;
+import org.apache.commons.lang3.tuple.Pair;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Service;
@@ -13,6 +14,7 @@ import org.springframework.stereotype.Service;
 import java.io.IOException;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
+import java.util.UUID;
 
 @Service
 public class TokenServiceImpl implements TokenService {
@@ -25,12 +27,14 @@ public class TokenServiceImpl implements TokenService {
     }
 
     @Override
-    public String generateToken(UserDetails user) {
+    public String generateToken(UserDetails user, UUID userId) {
         try {
-            if (user.getUsername() == null || user.getUsername().isBlank())  throw new JWTCreationException("Invalid user", new RuntimeException());
+            if (user.getUsername() == null || user.getUsername().isBlank())
+                throw new JWTCreationException("Invalid user", new RuntimeException());
             return JWT
                     .create()
                     .withIssuer("to_do_list_api")
+                    .withJWTId(userId.toString())
                     .withSubject(user.getUsername())
                     .withExpiresAt(getTokenExpirationDate())
                     .sign(buildAlgorithm(secret));
@@ -43,15 +47,15 @@ public class TokenServiceImpl implements TokenService {
     }
 
     @Override
-    public String validateToken(HttpServletRequest request) {
+    public Pair<String, String> validateToken(HttpServletRequest request) {
         try {
             var token = recoverToken(request);
-            return JWT
+            var jwt = JWT
                     .require(buildAlgorithm(secret))
                     .withIssuer("to_do_list_api")
                     .build()
-                    .verify(token)
-                    .getSubject();
+                    .verify(token);
+            return Pair.of(jwt.getSubject(), jwt.getId());
         } catch (Exception e) {
             throw new JWTVerificationException(
                     "Error while validating token: " + e.getLocalizedMessage(),
