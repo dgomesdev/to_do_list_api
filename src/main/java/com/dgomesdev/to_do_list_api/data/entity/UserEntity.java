@@ -1,69 +1,57 @@
 package com.dgomesdev.to_do_list_api.data.entity;
 
+import com.dgomesdev.to_do_list_api.domain.model.UserAuthority;
 import com.dgomesdev.to_do_list_api.domain.model.UserModel;
-import com.dgomesdev.to_do_list_api.domain.model.UserRole;
 import jakarta.persistence.*;
-import lombok.AllArgsConstructor;
 import lombok.Getter;
-import lombok.NoArgsConstructor;
 import lombok.Setter;
-import org.springframework.security.core.GrantedAuthority;
-import org.springframework.security.core.authority.SimpleGrantedAuthority;
-import org.springframework.security.core.userdetails.UserDetails;
+import org.hibernate.annotations.CreationTimestamp;
+import org.hibernate.annotations.UpdateTimestamp;
 
-import java.util.Collection;
-import java.util.List;
-import java.util.UUID;
+import java.util.*;
+import java.util.stream.Collectors;
 
 @Entity(name = "tb_user")
 @Getter
-@Setter
-@NoArgsConstructor
-@AllArgsConstructor
-public class UserEntity implements UserDetails {
-        @Id
-        @GeneratedValue(strategy = GenerationType.UUID)
-        UUID id;
-        @Column(unique = true, nullable = false)
-        String username;
-        @Column(unique = true, nullable = false)
-        String email;
-        @Column(nullable = false)
-        String password;
-        @Column(nullable = false)
-        @Enumerated(EnumType.STRING)
-        UserRole userRole = UserRole.USER;
+public class UserEntity {
+    @Id
+    @GeneratedValue(strategy = GenerationType.UUID)
+    private UUID id;
 
-        public UserEntity(UserModel userModel) {
-                this.id = userModel.id();
-                this.username = userModel.username();
-                this.email = userModel.email();
-                this.password = userModel.password();
-                this.userRole = userModel.userRole();
-        }
+    @Setter
+    @Column(unique = true, nullable = false)
+    private String username;
 
-        @Override
-        public Collection<? extends GrantedAuthority> getAuthorities() {
-                return List.of(new SimpleGrantedAuthority(this.userRole.toString()));
-        }
+    @Setter
+    @Column(nullable = false)
+    private String password;
 
-        @Override
-        public boolean isAccountNonExpired() {
-                return true;
-        }
+    @Setter
+    @ElementCollection(targetClass = UserAuthority.class, fetch = FetchType.EAGER)
+    @Enumerated(EnumType.STRING)
+    @CollectionTable(name = "user_authorities", joinColumns = @JoinColumn(name = "user_id"))
+    @Column(nullable = false)
+    private Set<UserAuthority> userAuthorities;
 
-        @Override
-        public boolean isAccountNonLocked() {
-                return true;
-        }
+    @OneToMany(mappedBy = "user", fetch = FetchType.LAZY, cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<TaskEntity> tasks = new ArrayList<>();
 
-        @Override
-        public boolean isCredentialsNonExpired() {
-                return true;
-        }
+    @CreationTimestamp
+    @Column(updatable = false,name = "created_at")
+    private Date createdAt;
 
-        @Override
-        public boolean isEnabled() {
-                return true;
-        }
+    @UpdateTimestamp
+    @Column(name = "updated_at")
+    private Date updatedAt;
+
+    public UserEntity(UserModel user) {
+        this.username = user.getUsername();
+        this.password = user.getPassword();
+        this.userAuthorities = user.getAuthorities()
+                .stream()
+                .map(userAuthority -> UserAuthority.valueOf(userAuthority.getAuthority()))
+                .collect(Collectors.toSet());
+    }
+
+    protected UserEntity() {}
 }

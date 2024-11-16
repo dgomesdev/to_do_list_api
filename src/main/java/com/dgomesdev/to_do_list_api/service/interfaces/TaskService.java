@@ -2,14 +2,12 @@ package com.dgomesdev.to_do_list_api.service.interfaces;
 
 import com.dgomesdev.to_do_list_api.domain.model.TaskModel;
 
-import java.util.List;
 import java.util.UUID;
 
 public interface TaskService {
 
-    void saveTask(TaskModel taskModel);
+    TaskModel saveTask(TaskModel newTask);
     TaskModel findTaskById(UUID taskId);
-    List<TaskModel> findAllTasksByUserId(UUID userId);
-    void updateTask(TaskModel updatedTaskModel);
-    void deleteTask(TaskModel taskToBeDeleted);
+    TaskModel updateTask(TaskModel updatedTask, UUID taskId);
+    void deleteTask(UUID taskId);
 }

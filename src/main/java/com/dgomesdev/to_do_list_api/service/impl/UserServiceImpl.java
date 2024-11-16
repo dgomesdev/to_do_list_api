@@ -2,41 +2,34 @@ package com.dgomesdev.to_do_list_api.service.impl;
 
 import com.dgomesdev.to_do_list_api.data.entity.UserEntity;
 import com.dgomesdev.to_do_list_api.data.repository.UserRepository;
-import com.dgomesdev.to_do_list_api.domain.exception.UserAlreadyExistsException;
+import com.dgomesdev.to_do_list_api.domain.exception.UnauthorizedUserException;
 import com.dgomesdev.to_do_list_api.domain.exception.UserNotFoundException;
+import com.dgomesdev.to_do_list_api.domain.model.UserAuthority;
 import com.dgomesdev.to_do_list_api.domain.model.UserModel;
-import com.dgomesdev.to_do_list_api.service.interfaces.TokenService;
 import com.dgomesdev.to_do_list_api.service.interfaces.UserService;
 import jakarta.transaction.Transactional;
-import org.springframework.security.core.userdetails.User;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
-import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 @Service
 @Transactional
-public class UserServiceImpl implements UserService, UserDetailsService {
+public class UserServiceImpl extends BaseServiceImpl implements UserService, UserDetailsService {
 
     private final UserRepository userRepository;
-    private final TokenService tokenService;
 
-    public UserServiceImpl(UserRepository userRepository, TokenService tokenService) {
+    public UserServiceImpl(UserRepository userRepository) {
         this.userRepository = userRepository;
-        this.tokenService = tokenService;
     }
 
     @Override
-    public void saveUser(UserModel userModel) {
+    public UserModel saveUser(UserModel newUser) {
         try {
-            if (userRepository.existsByUsername(userModel.username())) throw new UserAlreadyExistsException();
-            var newUserEntity = new UserEntity(userModel);
-            String encryptedPassword = new BCryptPasswordEncoder().encode(newUserEntity.getPassword());
-            newUserEntity.setPassword(encryptedPassword);
-            userRepository.save(newUserEntity);
+            return new UserModel(userRepository.save(new UserEntity(newUser)));
         } catch (Exception e) {
             throw new RuntimeException("Invalid user: " + e.getLocalizedMessage());
         }
@@ -44,36 +37,40 @@ public class UserServiceImpl implements UserService, UserDetailsService {
 
     @Override
     public UserModel findUserById(UUID userId) {
-        var user = userRepository.findById(userId)
-                .orElseThrow(UserNotFoundException::new);
-        return new UserModel(user);
+        if (!userId.toString().equals(this.getUserId())) throw new UnauthorizedUserException();
+        return new UserModel(userRepository.findById(userId)
+                .orElseThrow(UserNotFoundException::new));
     }
 
     @Override
-    public UserModel findUserByUsername(String username) {
-        var user = userRepository.findUserByUsername(username)
-                .orElseThrow(UserNotFoundException::new);
-        return new UserModel(user);
+    public UserModel updateUser(UserModel user, UUID userId) {
+            if (!userId.toString().equals(this.getUserId())) throw new UnauthorizedUserException();
+            var existingUser = userRepository.findById(user.getUserID())
+                    .orElseThrow(UserNotFoundException::new);
+
+            if (!existingUser.getUsername().equals(user.getUsername())) {
+                existingUser.setUsername(user.getUsername());
+            }
+            if (user.getPassword() != null) {
+                existingUser.setPassword(user.getPassword());
+            }
+            var userAuthorities = user.getAuthorities()
+                    .stream()
+                    .map(userAuthority -> UserAuthority.valueOf(userAuthority.getAuthority()))
+                    .collect(Collectors.toSet());
+            if (!existingUser.getUserAuthorities().equals(userAuthorities)) {
+                existingUser.setUserAuthorities(userAuthorities);
+            }
+
+            var updatedUser = userRepository.save(existingUser);
+
+            return new UserModel(updatedUser);
     }
 
-    @Override
-    public String updateUser(UserModel updatedUser) {
-        var userToBeUpdated = userRepository.findById(updatedUser.id()).orElseThrow(UserNotFoundException::new);
-        try {
-            String encryptedPassword = new BCryptPasswordEncoder().encode(updatedUser.password());
-            userToBeUpdated.setUsername(updatedUser.username());
-            userToBeUpdated.setPassword(encryptedPassword);
-            userToBeUpdated.setEmail(updatedUser.email());
-            userToBeUpdated.setUserRole(updatedUser.userRole());
-            var newUser = userRepository.save(userToBeUpdated);
-            return tokenService.generateToken(newUser, newUser.getId());
-        } catch (Exception e) {
-            throw new RuntimeException("Invalid user: " + e.getLocalizedMessage());
-        }
-    }
 
     @Override
     public void deleteUser(UUID userId) {
+        if (!userId.toString().equals(this.getUserId())) throw new UnauthorizedUserException();
         userRepository.delete(
                 userRepository.findById(userId).orElseThrow(UserNotFoundException::new)
         );
@@ -81,15 +78,7 @@ public class UserServiceImpl implements UserService, UserDetailsService {
 
     @Override
     public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
-        UserEntity foundUserEntity = userRepository.findUserByUsername(username)
-                .orElseThrow(() -> new UsernameNotFoundException("Username " + username + " not found"));
-        return new User(
-                foundUserEntity.getUsername(),
-                foundUserEntity.getPassword(),
-                true,
-                true,
-                true,
-                true,
-                foundUserEntity.getAuthorities());
+        var user = userRepository.findUserByUsername(username).orElseThrow();
+        return new UserModel(user);
     }
 }

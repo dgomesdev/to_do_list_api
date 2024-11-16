@@ -4,17 +4,18 @@ import com.auth0.jwt.JWT;
 import com.auth0.jwt.algorithms.Algorithm;
 import com.auth0.jwt.exceptions.JWTCreationException;
 import com.auth0.jwt.exceptions.JWTVerificationException;
+import com.auth0.jwt.interfaces.DecodedJWT;
+import com.dgomesdev.to_do_list_api.domain.model.UserAuthority;
+import com.dgomesdev.to_do_list_api.domain.model.UserModel;
 import com.dgomesdev.to_do_list_api.service.interfaces.TokenService;
-import jakarta.servlet.http.HttpServletRequest;
-import org.apache.commons.lang3.tuple.Pair;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Service;
 
-import java.io.IOException;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
+import java.util.Set;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 @Service
 public class TokenServiceImpl implements TokenService {
@@ -27,51 +28,60 @@ public class TokenServiceImpl implements TokenService {
     }
 
     @Override
-    public String generateToken(UserDetails user, UUID userId) {
+    public String generateToken(UserModel user) {
         try {
-            if (user.getUsername() == null || user.getUsername().isBlank())
-                throw new JWTCreationException("Invalid user", new RuntimeException());
             return JWT
                     .create()
                     .withIssuer("to_do_list_api")
-                    .withJWTId(userId.toString())
-                    .withSubject(user.getUsername())
+                    .withClaim("userId", user.getUserID().toString())
+                    .withClaim("username", user.getUsername())
+                    .withClaim("userAuthorities", user.getAuthorities().stream().map(Object::toString).toList())
                     .withExpiresAt(getTokenExpirationDate())
                     .sign(buildAlgorithm(secret));
         } catch (Exception e) {
             throw new JWTCreationException(
-                    "Error while generating token: " + e.getLocalizedMessage(),
+                    "Error while generating token: " + e.getMessage(),
                     new RuntimeException()
             );
         }
     }
 
     @Override
-    public Pair<String, String> validateToken(HttpServletRequest request) {
+    public UserModel getUserFromToken(String token) {
         try {
-            var token = recoverToken(request);
-            var jwt = JWT
+            var decodedToken = validateToken(token);
+            UUID userId = UUID.fromString(decodedToken.getClaim("userId").asString());
+            String username = decodedToken.getClaim("username").asString();
+            var authoritiesList = decodedToken.getClaim("userAuthorities").asList(String.class);
+            Set<UserAuthority> userAuthorities = authoritiesList.stream()
+                    .map(UserAuthority::valueOf)
+                    .collect(Collectors.toSet());
+
+            return new UserModel(userId, username, userAuthorities);
+        } catch (Exception e) {
+            throw new JWTVerificationException(
+                    "Error while getting user from token: " + e.getMessage(),
+                    new RuntimeException()
+            );
+        }
+    }
+
+    private DecodedJWT validateToken(String token) {
+        try {
+            return JWT
                     .require(buildAlgorithm(secret))
                     .withIssuer("to_do_list_api")
                     .build()
                     .verify(token);
-            return Pair.of(jwt.getSubject(), jwt.getId());
         } catch (Exception e) {
             throw new JWTVerificationException(
-                    "Error while validating token: " + e.getLocalizedMessage(),
+                    "Error while validating token: " + e.getMessage(),
                     new RuntimeException()
             );
         }
     }
 
-    private String recoverToken(HttpServletRequest request) throws IOException {
-        var authHeader = request.getHeader("Authorization");
-        if (authHeader == null) throw new IOException("The token is null.");
-        return authHeader.replace("Bearer ", "");
-    }
-
-    @Override
-    public Instant getTokenExpirationDate() {
+    private Instant getTokenExpirationDate() {
         return Instant.now().plus(2, ChronoUnit.HOURS);
     }
 }

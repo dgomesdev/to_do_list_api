@@ -2,29 +2,35 @@ package com.dgomesdev.to_do_list_api.service.impl;
 
 import com.dgomesdev.to_do_list_api.data.entity.TaskEntity;
 import com.dgomesdev.to_do_list_api.data.repository.TaskRepository;
+import com.dgomesdev.to_do_list_api.data.repository.UserRepository;
 import com.dgomesdev.to_do_list_api.domain.exception.TaskNotFoundException;
+import com.dgomesdev.to_do_list_api.domain.exception.UnauthorizedUserException;
+import com.dgomesdev.to_do_list_api.domain.exception.UserNotFoundException;
 import com.dgomesdev.to_do_list_api.domain.model.TaskModel;
+import com.dgomesdev.to_do_list_api.domain.model.UserAuthority;
 import com.dgomesdev.to_do_list_api.service.interfaces.TaskService;
 import jakarta.transaction.Transactional;
 import org.springframework.stereotype.Service;
 
-import java.util.List;
 import java.util.UUID;
 
 @Service
 @Transactional
-public class TaskServiceImpl implements TaskService {
+public class TaskServiceImpl extends BaseServiceImpl implements TaskService {
 
     private final TaskRepository taskRepository;
+    private final UserRepository userRepository;
 
-    public TaskServiceImpl(TaskRepository taskRepository) {
+    public TaskServiceImpl(TaskRepository taskRepository, UserRepository userRepository) {
         this.taskRepository = taskRepository;
+        this.userRepository = userRepository;
     }
 
     @Override
-    public void saveTask(TaskModel taskModel) {
+    public TaskModel saveTask(TaskModel task) {
         try {
-            taskRepository.save(new TaskEntity(taskModel));
+            var user = userRepository.findById(UUID.fromString(getUserId())).orElseThrow(UserNotFoundException::new);
+            return new TaskModel(taskRepository.save(new TaskEntity(task, user)));
         } catch (Exception e) {
             throw new RuntimeException("Invalid task: " + e.getLocalizedMessage());
         }
@@ -32,43 +38,43 @@ public class TaskServiceImpl implements TaskService {
 
     @Override
     public TaskModel findTaskById(UUID taskId) {
-        var task = taskRepository.findById(taskId).orElseThrow(TaskNotFoundException::new);
+        var task = taskRepository.findById(taskId)
+                .orElseThrow(TaskNotFoundException::new);
+        if (!task.getUser().getId().toString().equals(this.getUserId()) && !this.getUserAuthorities().contains(UserAuthority.ADMIN))
+            throw new UnauthorizedUserException();
         return new TaskModel(task);
     }
 
     @Override
-    public List<TaskModel> findAllTasksByUserId(UUID userId) {
-        try {
-            return taskRepository
-                    .findTasksByUserId(userId)
-                    .stream()
-                    .map(TaskModel::new)
-                    .toList();
-        } catch (Exception e) {
-            throw new RuntimeException(e.getLocalizedMessage());
+    public TaskModel updateTask(TaskModel task, UUID taskId) {
+        var existingTask = taskRepository.findById(taskId)
+                .orElseThrow(TaskNotFoundException::new);
+
+        if (!existingTask.getUser().getId().toString().equals(this.getUserId()) && !this.getUserAuthorities().contains(UserAuthority.ADMIN))
+            throw new UnauthorizedUserException();
+
+        if (!existingTask.getTitle().equals(task.getTitle())) {
+            existingTask.setTitle(task.getTitle());
         }
+        if (!existingTask.getDescription().equals(task.getDescription())) {
+            existingTask.setDescription(task.getDescription());
+        }
+        if (!existingTask.getPriority().equals(task.getPriority())) {
+            existingTask.setPriority(task.getPriority());
+        }
+        if (!existingTask.getStatus().equals(task.getStatus())) {
+            existingTask.setStatus(task.getStatus());
+        }
+        var updatedTask = taskRepository.save(existingTask);
+
+        return new TaskModel(updatedTask);
     }
 
     @Override
-    public void updateTask(TaskModel updatedTask) {
-        var taskToBeUpdated = taskRepository.findById(updatedTask.id()).orElseThrow(TaskNotFoundException::new);
-        try {
-            taskToBeUpdated.setTitle(updatedTask.title());
-            taskToBeUpdated.setDescription(updatedTask.description());
-            taskToBeUpdated.setPriority(updatedTask.priority());
-            taskToBeUpdated.setStatus(updatedTask.status());
-            taskRepository.save(taskToBeUpdated);
-        } catch (Exception e) {
-            throw new RuntimeException("Invalid task: " + e.getLocalizedMessage());
-        }
-    }
-
-    @Override
-    public void deleteTask(TaskModel taskToBeDeleted) {
-        try {
-            taskRepository.delete(new TaskEntity(taskToBeDeleted));
-        } catch (Exception e) {
-            throw new RuntimeException("Error: " + e.getLocalizedMessage());
-        }
+    public void deleteTask(UUID taskId) {
+        var task = taskRepository.findById(taskId).orElseThrow(TaskNotFoundException::new);
+        if (!task.getUser().getId().toString().equals(this.getUserId()) && !this.getUserAuthorities().contains(UserAuthority.ADMIN))
+            throw new UnauthorizedUserException();
+        taskRepository.delete(task);
     }
 }

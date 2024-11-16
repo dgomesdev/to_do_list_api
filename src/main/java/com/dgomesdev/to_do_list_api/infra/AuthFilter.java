@@ -8,9 +8,8 @@ import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.lang.NonNull;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.security.core.userdetails.UserDetails;
-import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
 
@@ -19,8 +18,6 @@ import java.io.IOException;
 @Component
 public class AuthFilter extends OncePerRequestFilter {
 
-    @Autowired
-    private UserDetailsService userService;
     @Autowired
     private TokenService tokenService;
 
@@ -31,15 +28,20 @@ public class AuthFilter extends OncePerRequestFilter {
             @NonNull FilterChain filterChain
     ) throws ServletException, IOException {
         try {
-            var token = tokenService.validateToken(request);
-            UserDetails userDetails = userService.loadUserByUsername(token.getKey());
-            var authentication = new UsernamePasswordAuthenticationToken(userDetails, null, userDetails.getAuthorities());
+            var token = recoverToken(request);
+            var user = tokenService.getUserFromToken(token);
+            Authentication authentication = new UsernamePasswordAuthenticationToken(user.getUserID(), null, user.getAuthorities());
             SecurityContextHolder.getContext().setAuthentication(authentication);
-            request.setAttribute("userId", token.getValue());
         } catch (Exception e) {
             System.out.println(e.getLocalizedMessage());
         } finally {
             filterChain.doFilter(request, response);
         }
+    }
+
+    private String recoverToken(HttpServletRequest request) throws IOException {
+        var authHeader = request.getHeader("Authorization");
+        if (authHeader == null) throw new IOException("The token is null.");
+        return authHeader.replace("Bearer ", "");
     }
 }

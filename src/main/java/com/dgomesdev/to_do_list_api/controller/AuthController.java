@@ -1,12 +1,10 @@
 package com.dgomesdev.to_do_list_api.controller;
 
-import com.dgomesdev.to_do_list_api.controller.dto.request.AuthRequestDto;
-import com.dgomesdev.to_do_list_api.controller.dto.request.UserRequestDto;
-import com.dgomesdev.to_do_list_api.controller.dto.response.MessageDto;
-import com.dgomesdev.to_do_list_api.controller.dto.response.ResponseDto;
-import com.dgomesdev.to_do_list_api.domain.exception.UserNotFoundException;
+import com.dgomesdev.to_do_list_api.domain.model.UserAuthority;
 import com.dgomesdev.to_do_list_api.domain.model.UserModel;
-import com.dgomesdev.to_do_list_api.domain.model.UserRole;
+import com.dgomesdev.to_do_list_api.dto.request.UserRequestDto;
+import com.dgomesdev.to_do_list_api.dto.response.MessageDto;
+import com.dgomesdev.to_do_list_api.dto.response.ResponseDto;
 import com.dgomesdev.to_do_list_api.service.interfaces.TokenService;
 import com.dgomesdev.to_do_list_api.service.interfaces.UserService;
 import io.swagger.v3.oas.annotations.Operation;
@@ -19,10 +17,11 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
-import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.UUID;
+import java.util.Set;
 
 @CrossOrigin
 @RestController
@@ -36,6 +35,8 @@ public class AuthController {
     private TokenService tokenService;
     @Autowired
     private AuthenticationManager authenticationManager;
+    @Autowired
+    private PasswordEncoder passwordEncoder;
 
     @PostMapping("register")
     @Operation(summary = "Register an user", description = "Create the user")
@@ -44,21 +45,14 @@ public class AuthController {
             @ApiResponse(responseCode = "400", description = "Invalid user"),
             @ApiResponse(responseCode = "500", description = "Error while creating user")
     })
-    public ResponseEntity<ResponseDto> register(@RequestBody @Valid UserRequestDto userDto) {
-        try {
-            userService.saveUser(new UserModel(UUID.randomUUID(), userDto, UserRole.USER));
+    public ResponseEntity<ResponseDto> register(@RequestBody @Valid UserRequestDto user) {
+            String encodedPassword = passwordEncoder.encode(user.password());
+            UserModel savedUser = userService.saveUser(new UserModel(user.username(), encodedPassword, Set.of(UserAuthority.USER)));
+            String token = tokenService.generateToken(savedUser);
+            System.out.println(token);
             return ResponseEntity
                     .status(HttpStatus.CREATED)
-                    .body(new MessageDto("User registered successfully"));
-        } catch (IllegalArgumentException e) {
-            return ResponseEntity
-                    .status(HttpStatus.BAD_REQUEST)
-                    .body(new MessageDto("Invalid user"));
-        } catch (Exception e) {
-            return ResponseEntity
-                    .status(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .body(new MessageDto("Error while creating user: " + e.getLocalizedMessage()));
-        }
+                    .body(new MessageDto("User registered successfully. Token: " + token));
     }
 
     @PostMapping("login")
@@ -68,23 +62,15 @@ public class AuthController {
             @ApiResponse(responseCode = "401", description = "User not found"),
             @ApiResponse(responseCode = "500", description = "Error while logging in")
     })
-    public ResponseEntity<ResponseDto> login(@RequestBody @Valid AuthRequestDto authRequestDto) {
-        try {
-            var user = userService.findUserByUsername(authRequestDto.username());
-            var usernamePassword = new UsernamePasswordAuthenticationToken(authRequestDto.username(), authRequestDto.password());
-            var auth = authenticationManager.authenticate(usernamePassword);
-            var token = tokenService.generateToken((UserDetails) auth.getPrincipal(), user.id());
+    public ResponseEntity<ResponseDto> login(@RequestBody @Valid UserRequestDto user) {
+            Authentication authentication = authenticationManager.authenticate(
+                    new UsernamePasswordAuthenticationToken(user.username(), user.password())
+            );
+            System.out.println(authentication);
+            var loggedUser = (UserModel) authentication.getPrincipal();
+            var token = tokenService.generateToken(loggedUser);
             return ResponseEntity
                     .status(HttpStatus.OK)
-                    .body(new MessageDto("Login successful for user " + authRequestDto.username() + " with token " + token));
-        } catch (UserNotFoundException e) {
-            return ResponseEntity
-                    .status(HttpStatus.UNAUTHORIZED)
-                    .body(new MessageDto(e.getLocalizedMessage()));
-        } catch (Exception e) {
-            return ResponseEntity
-                    .status(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .body(new MessageDto("Error while logging in: " + e.getClass() + " " + e.getLocalizedMessage()));
-        }
+                    .body(new MessageDto("Login successful for user " + user.username() + " with token " + token));
     }
 }

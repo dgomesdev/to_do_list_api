@@ -6,9 +6,8 @@ import java.util.UUID;
 
 public interface UserService {
 
-    void saveUser(UserModel userModel);
+    UserModel saveUser(UserModel newUser);
     UserModel findUserById(UUID userId);
-    UserModel findUserByUsername(String username);
-    String updateUser(UserModel updatedUser);
+    UserModel updateUser(UserModel updatedUser, UUID userId);
     void deleteUser(UUID userId);
 }

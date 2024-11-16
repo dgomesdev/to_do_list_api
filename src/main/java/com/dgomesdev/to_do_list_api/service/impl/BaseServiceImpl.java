@@ -1,0 +1,29 @@
+package com.dgomesdev.to_do_list_api.service.impl;
+
+import com.dgomesdev.to_do_list_api.domain.model.UserAuthority;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
+
+import java.util.List;
+
+public abstract class BaseServiceImpl {
+
+    private Authentication getSecurityContextAuthentication() {
+        return SecurityContextHolder.getContext().getAuthentication();
+    }
+
+    protected String getUserId() {
+        var userId = getSecurityContextAuthentication().getPrincipal().toString();
+        System.out.println("UserID: " + userId);
+        return userId;
+    }
+
+    protected List<UserAuthority> getUserAuthorities() {
+        var userAuthorities = getSecurityContextAuthentication().getAuthorities()
+                .stream()
+                .map(authority -> UserAuthority.valueOf(authority.getAuthority()))
+                .toList();
+        System.out.println(userAuthorities);
+        return userAuthorities;
+    }
+}

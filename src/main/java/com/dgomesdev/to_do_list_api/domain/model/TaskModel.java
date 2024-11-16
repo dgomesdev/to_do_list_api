@@ -1,37 +1,32 @@
 package com.dgomesdev.to_do_list_api.domain.model;
 
-import com.dgomesdev.to_do_list_api.controller.dto.request.TaskRequestDto;
 import com.dgomesdev.to_do_list_api.data.entity.TaskEntity;
+import com.dgomesdev.to_do_list_api.dto.request.TaskRequestDto;
+import lombok.Getter;
 
 import java.util.UUID;
 
-public record TaskModel(
-        UUID id,
-        String title,
-        String description,
-        Priority priority,
-        Status status,
-        UUID userId
-) {
-    public TaskModel(UUID taskId, TaskRequestDto taskRequestDto, UUID userId) {
-        this(
-                taskId,
-                taskRequestDto.title(),
-                taskRequestDto.description(),
-                taskRequestDto.priority(),
-                taskRequestDto.status(),
-                userId
-        );
+@Getter
+public class TaskModel{
+
+    private UUID id;
+    private final String title;
+    private final String description;
+    private final Priority priority;
+    private final Status status;
+
+    public TaskModel(TaskRequestDto taskRequestDto) {
+        this.title = taskRequestDto.title();
+        this.description = taskRequestDto.description();
+        this.priority = taskRequestDto.priority();
+        this.status = taskRequestDto.status();
     }
 
     public TaskModel(TaskEntity taskEntity) {
-        this(
-                taskEntity.getId(),
-                taskEntity.getTitle(),
-                taskEntity.getDescription(),
-                taskEntity.getPriority(),
-                taskEntity.getStatus(),
-                taskEntity.getUserId()
-        );
+        this.id = taskEntity.getId();
+        this.title = taskEntity.getTitle();
+        this.description = taskEntity.getDescription();
+        this.priority = taskEntity.getPriority();
+        this.status = taskEntity.getStatus();
     }
 }
