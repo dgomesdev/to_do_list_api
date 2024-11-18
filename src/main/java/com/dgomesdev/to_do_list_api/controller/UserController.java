@@ -60,7 +60,7 @@ public class UserController {
             @RequestBody @Valid UserRequestDto user
     ) {
         var encodedPassword = passwordEncoder.encode(user.password());
-        var updatedUser = userService.updateUser(new UserModel(user.username(), encodedPassword, Set.of(UserAuthority.USER)), userId);
+        var updatedUser = userService.updateUser(userId, new UserModel(user.username(), encodedPassword, Set.of(UserAuthority.USER)));
         return ResponseEntity
                 .status(HttpStatus.OK)
                 .body(new UserResponseDto(updatedUser));
@@ -75,7 +75,8 @@ public class UserController {
             @ApiResponse(responseCode = "500", description = "Error while deleting the user")
     })
     public ResponseEntity<ResponseDto> deleteUser(@PathVariable UUID userId) {
-        userService.deleteUser(userId);
+        if (userId != null) userService.deleteUser(userId);
+        else throw new NullPointerException("userId cannot be null");
         return ResponseEntity
                 .status(HttpStatus.NO_CONTENT)
                 .body(new MessageDto("User deleted successfully"));

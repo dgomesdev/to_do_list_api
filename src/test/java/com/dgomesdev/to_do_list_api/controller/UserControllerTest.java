@@ -1,222 +1,134 @@
-//package com.dgomesdev.to_do_list_api.controller;
-//
-//import com.dgomesdev.to_do_list_api.domain.exception.UserNotFoundException;
-//import com.dgomesdev.to_do_list_api.domain.model.UserModel;
-//import com.dgomesdev.to_do_list_api.dto.request.UserRequestDto;
-//import com.dgomesdev.to_do_list_api.service.impl.UserServiceImpl;
-//import jakarta.servlet.http.HttpServletRequest;
-//import org.junit.jupiter.api.BeforeEach;
-//import org.junit.jupiter.api.DisplayName;
-//import org.junit.jupiter.api.Test;
-//import org.junit.jupiter.api.extension.ExtendWith;
-//import org.mockito.InjectMocks;
-//import org.mockito.Mock;
-//import org.mockito.junit.jupiter.MockitoExtension;
-//import org.springframework.http.HttpStatus;
-//import org.springframework.http.ResponseEntity;
-//import org.springframework.security.crypto.password.PasswordEncoder;
-//
-//import java.util.UUID;
-//
-//import static org.junit.jupiter.api.Assertions.*;
-//import static org.mockito.ArgumentMatchers.any;
-//import static org.mockito.Mockito.*;
-//
-//@ExtendWith(MockitoExtension.class)
-//class UserControllerTest {
-//
-//    @InjectMocks
-//    UserController userController;
-//
-//    @Mock
-//    private UserServiceImpl userService;
-//
-//    @Mock
-//    private PasswordEncoder passwordEncoder;
-//
-//    private final UUID mockUserId = UUID.randomUUID();
-//    private UserRequestDto user;
-//    private UserModel userModel;
-//
-//    @Test
-//    @DisplayName("Should find user by Id successfully")
-//    void givenUserId_whenFindingUserById_thenReturnResponseOk() {
-//        //GIVEN
-//        userModel = new UserModel()
-//        when(userService.findUserById(mockUserId)).thenReturn(mockUserModel);
-//
-//        //WHEN
-//        ResponseEntity<?> response = userController.findUserById(mockUserId);
-//
-//        //THEN
-//        assertEquals(HttpStatus.OK, responseOk.getStatusCode());
-//        assertNotNull(responseOk.getBody());
-//    }
-//
-//    @Test
-//    @DisplayName("Should throw an exception when the user does not exist")
-//    void givenNonExistentUser_whenFindingUserById_thenReturnResponseNotFound() {
-//        //GIVEN
-//        when(userService.findUserById(any())).thenThrow(new UserNotFoundException());
-//
-//        //WHEN
-//        var responseNotFound = userController.findUserById(UUID.randomUUID());
-//
-//        //THEN
-//        assertEquals(HttpStatus.NOT_FOUND, responseNotFound.getStatusCode());
-//        assertEquals(new MessageDto("User not found"), responseNotFound.getBody());
-//    }
-//
-//    @Test
-//    @DisplayName("Should throw an exception when an error occurs")
-//    void givenUserId_whenFindingUserById_thenReturnResponseError() {
-//        //GIVEN
-//        when(userService.findUserById(any())).thenThrow(new RuntimeException());
-//
-//        //WHEN
-//        var responseError = userController.findUserById(mockUserId);
-//
-//        //THEN
-//        assertEquals(HttpStatus.INTERNAL_SERVER_ERROR, responseError.getStatusCode());
-//        assertNotNull(responseError.getBody());
-//        assertTrue(responseError.getBody().toString().contains("Error while finding the user"));
-//    }
-//
-//    @Test
-//    @DisplayName("Should update user successfully")
-//    void givenUser_whenUpdatingUser_thenReturnResponseOk() {
-//        //GIVEN
-//        when(mockRequest.getAttribute("userId")).thenReturn(mockUserId);
-//        when(userService.updateUser(any())).thenReturn("Valid token");
-//
-//        //WHEN
-//        var responseOk = userController.updateUser(mockUserId, mockRegisterDto, mockRequest);
-//
-//        //THEN
-//        assertEquals(HttpStatus.OK, responseOk.getStatusCode());
-//        assertNotNull(responseOk.getBody());
-//        System.out.println(responseOk.getBody().toString());
-//        //assertTrue(responseOk.getBody().contains("User updated successfully"));
-//    }
-//
-//    @Test
-//    @DisplayName("Should throw an exception when an unauthorized user tries to update an user")
-//    void givenUnauthorizedUser_whenUpdatingUser_thenReturnResponseUnauthorized() {
-//        //GIVEN
-//        when(mockRequest.getAttribute("userId")).thenReturn(UUID.randomUUID());
-//
-//        //WHEN
-//        var responseUnauthorized = userController.updateUser(mockUserId, mockRegisterDto, mockRequest);
-//
-//        //THEN
-//        assertEquals(HttpStatus.UNAUTHORIZED, responseUnauthorized.getStatusCode());
-//        assertEquals(new MessageDto("Unauthorized user"), responseUnauthorized.getBody());
-//    }
-//
-//    @Test
-//    @DisplayName("Should throw an exception when trying to update a non-existent user")
-//    void givenNonExistentUser_whenUpdatingUser_thenReturnResponseNotFound() {
-//        //GIVEN
-//        when(mockRequest.getAttribute("userId")).thenReturn(mockUserId);
-//        when(userService.updateUser(mockUserModel)).thenThrow(new UserNotFoundException());
-//
-//        //WHEN
-//        var responseNotFound = userController.updateUser(mockUserId, mockRegisterDto, mockRequest);
-//
-//        //THEN
-//        assertEquals(HttpStatus.NOT_FOUND, responseNotFound.getStatusCode());
-//        assertEquals(new MessageDto("User not found"), responseNotFound.getBody());
-//    }
-//
-//    @Test
-//    @DisplayName("Should throw an exception when trying to update an invalid user")
-//    void givenNonInvalidUser_whenUpdatingUser_thenReturnResponseBadRequest() {
-//        //GIVEN
-//        when(mockRequest.getAttribute("userId")).thenReturn(mockUserId);
-//        when(userService.updateUser(mockUserModel)).thenThrow(new IllegalArgumentException());
-//
-//        //WHEN
-//        var responseBadRequest = userController.updateUser(mockUserId, mockRegisterDto, mockRequest);
-//
-//        //THEN
-//        assertEquals(HttpStatus.BAD_REQUEST, responseBadRequest.getStatusCode());
-//        assertEquals(new MessageDto("Invalid user"), responseBadRequest.getBody());
-//    }
-//    @Test
-//    @DisplayName("Should throw an exception when an error occurs")
-//    void givenInvalidUser_whenUpdatingUser_thenReturnResponseError() {
-//        //GIVEN
-//        when(mockRequest.getAttribute("userId")).thenReturn(mockUserId);
-//        when(userService.updateUser(mockUserModel)).thenThrow(new RuntimeException());
-//
-//        //WHEN
-//        var responseError = userController.updateUser(mockUserId, mockRegisterDto, mockRequest);
-//
-//        //THEN
-//        assertEquals(HttpStatus.INTERNAL_SERVER_ERROR, responseError.getStatusCode());
-//        assertNotNull(responseError.getBody());
-//        var message = responseError.getBody().toString();
-//        assertTrue(message.contains("Error while updating the user"));
-//    }
-//
-//    @Test
-//    @DisplayName("Should delete user successfully")
-//     void givenUserId_whenDeletingUser_thenReturnResponseNoContent() {
-//        //GIVEN
-//        when(mockRequest.getAttribute("userId")).thenReturn(mockUserId);
-//        doNothing().when(userService).deleteUser(any());
-//
-//        //WHEN
-//        var responseNoContent = userController.deleteUser(mockUserId, mockRequest);
-//
-//        //THEN
-//        assertEquals(HttpStatus.NO_CONTENT, responseNoContent.getStatusCode());
-//        assertEquals(new MessageDto("User deleted successfully"), responseNoContent.getBody());
-//    }
-//
-//    @Test
-//    @DisplayName("Should throw an unauthorized user tries to delete an user")
-//     void givenUnauthorizedUser_whenDeletingUser_thenReturnResponseUnauthorized() {
-//        //GIVEN
-//        when(mockRequest.getAttribute("userId")).thenReturn(UUID.randomUUID());
-//
-//        //WHEN
-//        var responseUnauthorized = userController.deleteUser(mockUserId, mockRequest);
-//
-//        //THEN
-//        assertEquals(HttpStatus.UNAUTHORIZED, responseUnauthorized.getStatusCode());
-//        assertEquals(new MessageDto("Unauthorized user"), responseUnauthorized.getBody());
-//    }
-//
-//    @Test
-//    @DisplayName("Should throw an exception when trying to delete an non-existent user")
-//     void givenNonExistentUser_whenDeletingUser_thenReturnResponseNotFound() {
-//        //GIVEN
-//        when(mockRequest.getAttribute("userId")).thenReturn(mockUserId);
-//        doThrow(new UserNotFoundException()).when(userService).deleteUser(any());
-//
-//        //WHEN
-//        var responseNotFound = userController.deleteUser(mockUserId, mockRequest);
-//
-//        //THEN
-//        assertEquals(HttpStatus.NOT_FOUND, responseNotFound.getStatusCode());
-//        assertEquals(new MessageDto("User not found"), responseNotFound.getBody());
-//    }
-//
-//    @Test
-//    @DisplayName("Should throw an exception when an error occurs")
-//     void givenUserId_whenDeletingUser_thenReturnResponseError() {
-//        //GIVEN
-//        when(mockRequest.getAttribute("userId")).thenReturn(mockUserId);
-//        doThrow(new RuntimeException()).when(userService).deleteUser(any());
-//
-//        //WHEN
-//        var responseError = userController.deleteUser(mockUserId, mockRequest);
-//
-//        //THEN
-//        assertEquals(HttpStatus.INTERNAL_SERVER_ERROR, responseError.getStatusCode());
-//        assertNotNull(responseError.getBody());
-//        var message = responseError.getBody().toString();
-//        assertTrue(message.contains("Error while deleting the user"));
-//    }
-//}
+package com.dgomesdev.to_do_list_api.controller;
+
+import com.dgomesdev.to_do_list_api.data.entity.UserEntity;
+import com.dgomesdev.to_do_list_api.domain.model.UserAuthority;
+import com.dgomesdev.to_do_list_api.domain.model.UserModel;
+import com.dgomesdev.to_do_list_api.dto.request.UserRequestDto;
+import com.dgomesdev.to_do_list_api.dto.response.MessageDto;
+import com.dgomesdev.to_do_list_api.dto.response.UserResponseDto;
+import com.dgomesdev.to_do_list_api.service.interfaces.UserService;
+import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.security.crypto.password.PasswordEncoder;
+
+import java.util.Set;
+import java.util.UUID;
+
+import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.Mockito.when;
+
+@ExtendWith(MockitoExtension.class)
+class UserControllerTest {
+
+    @InjectMocks
+    UserController userController;
+
+    @Mock
+    private UserService userService;
+
+    @Mock
+    private PasswordEncoder passwordEncoder;
+
+    private final UUID userId = UUID.randomUUID();
+    private final UserRequestDto userRequestDto = new UserRequestDto("username", "password");
+    private final UserModel userModelRequest = new UserModel("username", "password", Set.of(UserAuthority.USER));
+    private final UserModel userModelResponse = new UserModel(new UserEntity(userModelRequest));
+    private final UserResponseDto userResponseDto = new UserResponseDto(userModelResponse);
+
+    @Test
+    @DisplayName("Should find user by Id successfully")
+    void givenUserId_whenFindingUserById_thenReturnResponseOk() {
+        //GIVEN
+        when(userService.findUserById(userId)).thenReturn(userModelResponse);
+
+        //WHEN
+        ResponseEntity<?> response = userController.findUserById(userId);
+
+        //THEN
+        assertEquals(HttpStatus.OK, response.getStatusCode());
+        UserResponseDto responseBody = (UserResponseDto) response.getBody();
+        assertNotNull(responseBody);
+        assertEquals(userResponseDto, responseBody);
+    }
+
+    @Test
+    @DisplayName("Should throw an exception when the user passes a null id")
+    void givenNullId_whenFindingUserById_thenThrowException() {
+        //GIVEN
+        NullPointerException exception;
+
+        //WHEN
+        exception = assertThrows(NullPointerException.class, () -> userController.findUserById(null));
+
+        //THEN
+        assertEquals("Cannot invoke \"com.dgomesdev.to_do_list_api.domain.model.UserModel.getUserId()\" because \"user\" is null", exception.getMessage());
+    }
+
+    @Test
+    @DisplayName("Should update user successfully")
+    void givenUser_whenUpdatingUser_thenReturnResponseOk() {
+        //GIVEN
+        String encodedPassword = "encodedPassword";
+        when(passwordEncoder.encode("password")).thenReturn(encodedPassword);
+        UserModel userModelUpdate = new UserModel(userRequestDto.username(), encodedPassword, Set.of(UserAuthority.USER));
+        when(userService.updateUser(userId, userModelUpdate)).thenReturn(userModelResponse);
+
+        //WHEN
+        ResponseEntity<?> response = userController.updateUser(userId, userRequestDto);
+
+        //THEN
+        assertEquals(HttpStatus.OK, response.getStatusCode());
+        UserResponseDto responseBody = (UserResponseDto) response.getBody();
+        assertNotNull(responseBody);
+        assertEquals(userResponseDto, responseBody);
+    }
+
+    @Test
+    @DisplayName("Should throw an exception when trying to update with a null id")
+    void givenNullId_whenUpdatingUser_thenThrowException() {
+        //GIVEN
+        IllegalArgumentException exception;
+
+        //WHEN
+        exception = assertThrows(IllegalArgumentException.class, () -> userController.updateUser(null, userRequestDto));
+
+        //THEN
+        assertEquals("Cannot pass null or empty values to constructor", exception.getMessage());
+    }
+
+    @Test
+    @DisplayName("Should delete user successfully")
+     void givenUserId_whenDeletingUser_thenReturnResponseNoContent() {
+        //GIVEN
+        ResponseEntity<?> response;
+
+        //WHEN
+        response = userController.deleteUser(userId);
+
+        //THEN
+        assertEquals(HttpStatus.NO_CONTENT, response.getStatusCode());
+        MessageDto responseBody = (MessageDto) response.getBody();
+        assertNotNull(responseBody);
+        assertEquals("User deleted successfully", responseBody.message());
+    }
+
+    @Test
+    @DisplayName("Should throw an exception when user passes null id")
+     void givenNullId_whenDeletingUser_thenThrowException() {
+        //GIVEN
+        NullPointerException exception;
+
+        //WHEN
+        exception = assertThrows(NullPointerException.class, () -> userController.deleteUser(null));
+
+        //THEN
+        assertEquals("userId cannot be null", exception.getMessage());
+
+    }
+}

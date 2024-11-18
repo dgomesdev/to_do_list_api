@@ -67,7 +67,7 @@ public class TaskController {
             @PathVariable UUID taskId,
             @RequestBody @Valid TaskRequestDto taskRequestDto
     ) {
-            var updatedTask = taskService.updateTask(new TaskModel(taskRequestDto), taskId);
+            var updatedTask = taskService.updateTask(taskId, new TaskModel(taskRequestDto));
             return ResponseEntity
                     .status(HttpStatus.OK)
                     .body(new TaskResponseDto(updatedTask));
@@ -82,7 +82,8 @@ public class TaskController {
             @ApiResponse(responseCode = "500", description = "Error while deleting the task")
     })
     public ResponseEntity<ResponseDto> deleteTask(@PathVariable UUID taskId) {
-            taskService.deleteTask(taskId);
+            if (taskId != null )taskService.deleteTask(taskId);
+            else throw new NullPointerException("taskId cannot be null");
             return ResponseEntity
                     .status(HttpStatus.NO_CONTENT)
                     .body(new MessageDto("Task deleted successfully"));

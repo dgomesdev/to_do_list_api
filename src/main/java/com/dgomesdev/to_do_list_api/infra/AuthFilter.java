@@ -27,16 +27,14 @@ public class AuthFilter extends OncePerRequestFilter {
             @NonNull HttpServletResponse response,
             @NonNull FilterChain filterChain
     ) throws ServletException, IOException {
-        try {
-            var token = recoverToken(request);
+        var token = recoverToken(request);
+        if (!token.isBlank()) {
             var user = tokenService.getUserFromToken(token);
-            Authentication authentication = new UsernamePasswordAuthenticationToken(user.getUserID(), null, user.getAuthorities());
+            Authentication authentication = new UsernamePasswordAuthenticationToken(user.getUserId(), null, user.getAuthorities());
+            System.out.println(authentication);
             SecurityContextHolder.getContext().setAuthentication(authentication);
-        } catch (Exception e) {
-            System.out.println(e.getLocalizedMessage());
-        } finally {
-            filterChain.doFilter(request, response);
         }
+        filterChain.doFilter(request, response);
     }
 
     private String recoverToken(HttpServletRequest request) throws IOException {

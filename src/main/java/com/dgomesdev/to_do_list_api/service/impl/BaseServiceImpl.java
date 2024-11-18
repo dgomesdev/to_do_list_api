@@ -13,9 +13,7 @@ public abstract class BaseServiceImpl {
     }
 
     protected String getUserId() {
-        var userId = getSecurityContextAuthentication().getPrincipal().toString();
-        System.out.println("UserID: " + userId);
-        return userId;
+        return getSecurityContextAuthentication().getPrincipal().toString();
     }
 
     protected List<UserAuthority> getUserAuthorities() {

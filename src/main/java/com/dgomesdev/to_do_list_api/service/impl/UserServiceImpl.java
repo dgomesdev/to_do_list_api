@@ -28,11 +28,7 @@ public class UserServiceImpl extends BaseServiceImpl implements UserService, Use
 
     @Override
     public UserModel saveUser(UserModel newUser) {
-        try {
             return new UserModel(userRepository.save(new UserEntity(newUser)));
-        } catch (Exception e) {
-            throw new RuntimeException("Invalid user: " + e.getLocalizedMessage());
-        }
     }
 
     @Override
@@ -43,28 +39,30 @@ public class UserServiceImpl extends BaseServiceImpl implements UserService, Use
     }
 
     @Override
-    public UserModel updateUser(UserModel user, UUID userId) {
-            if (!userId.toString().equals(this.getUserId())) throw new UnauthorizedUserException();
-            var existingUser = userRepository.findById(user.getUserID())
-                    .orElseThrow(UserNotFoundException::new);
+    public UserModel updateUser(UUID userId, UserModel user) {
+        if (user == null) throw new IllegalArgumentException("User cannot be null");
+        if (!userId.toString().equals(this.getUserId())) throw new UnauthorizedUserException();
 
-            if (!existingUser.getUsername().equals(user.getUsername())) {
-                existingUser.setUsername(user.getUsername());
-            }
-            if (user.getPassword() != null) {
-                existingUser.setPassword(user.getPassword());
-            }
-            var userAuthorities = user.getAuthorities()
-                    .stream()
-                    .map(userAuthority -> UserAuthority.valueOf(userAuthority.getAuthority()))
-                    .collect(Collectors.toSet());
-            if (!existingUser.getUserAuthorities().equals(userAuthorities)) {
-                existingUser.setUserAuthorities(userAuthorities);
-            }
+        var existingUser = userRepository.findById(userId)
+                .orElseThrow(UserNotFoundException::new);
 
-            var updatedUser = userRepository.save(existingUser);
+        if (!existingUser.getUsername().equals(user.getUsername())) {
+            existingUser.setUsername(user.getUsername());
+        }
+        if (user.getPassword() != null) {
+            existingUser.setPassword(user.getPassword());
+        }
+        var userAuthorities = user.getAuthorities()
+                .stream()
+                .map(userAuthority -> UserAuthority.valueOf(userAuthority.getAuthority()))
+                .collect(Collectors.toSet());
+        if (!existingUser.getUserAuthorities().equals(userAuthorities)) {
+            existingUser.setUserAuthorities(userAuthorities);
+        }
 
-            return new UserModel(updatedUser);
+        var updatedUser = userRepository.save(existingUser);
+
+        return new UserModel(updatedUser);
     }
 
 
@@ -78,7 +76,8 @@ public class UserServiceImpl extends BaseServiceImpl implements UserService, Use
 
     @Override
     public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
-        var user = userRepository.findUserByUsername(username).orElseThrow();
+        var user = userRepository.findUserByUsername(username)
+                .orElseThrow(() -> new UsernameNotFoundException("User not found with username: " + username));
         return new UserModel(user);
     }
 }

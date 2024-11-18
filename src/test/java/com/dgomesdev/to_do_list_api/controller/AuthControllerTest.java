@@ -43,8 +43,8 @@ public class AuthControllerTest {
     @Mock
     private PasswordEncoder passwordEncoder;
 
-    private final UserRequestDto user = new UserRequestDto("username", "password");
-    private final UserModel userModel = new UserModel("username", "password", Set.of(UserAuthority.USER));
+    private final UserRequestDto userRequestDto = new UserRequestDto("username", "password");
+    private final UserModel userModelResponse = new UserModel("username", "password", Set.of(UserAuthority.USER));
     private final String token = "sample token";
 
     @Test
@@ -52,11 +52,11 @@ public class AuthControllerTest {
     public void givenNewUser_whenRegisteringUser_returnResponseCreated() {
         //GIVEN
         when(passwordEncoder.encode("password")).thenReturn("encodedPassword");
-        when(userService.saveUser(any(UserModel.class))).thenReturn(userModel);
-        when(tokenService.generateToken(userModel)).thenReturn(token);
+        when(userService.saveUser(any(UserModel.class))).thenReturn(userModelResponse);
+        when(tokenService.generateToken(userModelResponse)).thenReturn(token);
 
         //WHEN
-        ResponseEntity<?> response = authController.register(user);
+        ResponseEntity<?> response = authController.register(userRequestDto);
 
         //THEN
         assertEquals(HttpStatus.CREATED, response.getStatusCode());
@@ -72,7 +72,7 @@ public class AuthControllerTest {
         var invalidUser = new UserRequestDto("", "123");
 
         //WHEN
-        Exception exception = assertThrows(IllegalArgumentException.class, () -> authController.register(invalidUser));
+        IllegalArgumentException exception = assertThrows(IllegalArgumentException.class, () -> authController.register(invalidUser));
 
         //THEN
         assertEquals("Cannot pass null or empty values to constructor", exception.getMessage());
@@ -82,17 +82,30 @@ public class AuthControllerTest {
     @DisplayName("Should log in user successfully")
     public void givenValidAttributes_whenLoggingInUser_thenReturnResponseOk() {
         //GIVEN
-        Authentication authentication = new UsernamePasswordAuthenticationToken(userModel, userModel.getPassword());
+        Authentication authentication = new UsernamePasswordAuthenticationToken(userModelResponse, userModelResponse.getPassword());
         when(authenticationManager.authenticate(any())).thenReturn(authentication);
-        when(tokenService.generateToken(userModel)).thenReturn(token);
+        when(tokenService.generateToken(userModelResponse)).thenReturn(token);
 
         //WHEN
-        ResponseEntity<?> response = authController.login(user);
+        ResponseEntity<?> response = authController.login(userRequestDto);
 
         //THEN
         assertEquals(HttpStatus.OK, response.getStatusCode());
         MessageDto responseBody = (MessageDto) response.getBody();
         assertNotNull(responseBody);
-        assertEquals("Login successful for user " + user.username() + " with token " + token , responseBody.message());
+        assertEquals("Login successful for user " + userRequestDto.username() + " with token " + token , responseBody.message());
+    }
+
+    @Test
+    @DisplayName("Should throw an exception when trying to log in an invalid user")
+    public void givenInvalidUser_whenLoggingInUser_throwException() {
+        //GIVEN
+        var invalidUser = new UserRequestDto("", "");
+
+        //WHEN
+        NullPointerException exception = assertThrows(NullPointerException.class, () -> authController.login(invalidUser));
+
+        //THEN
+        assertEquals("Cannot invoke \"org.springframework.security.core.Authentication.getPrincipal()\" because \"authentication\" is null", exception.getMessage());
     }
 }

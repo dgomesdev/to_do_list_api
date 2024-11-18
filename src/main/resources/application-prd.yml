@@ -7,8 +7,11 @@ spring:
     open-in-view: false
     hibernate:
       ddl-auto: validate
+    properties:
+      hibernate:
+        format_sql: true
 
 api:
   security:
     token:
-      secret: ${JWT_SECRET:my-secret-key}
+      secret: ${JWT_SECRET}

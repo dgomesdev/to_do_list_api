@@ -13,7 +13,7 @@ public record UserResponseDto(
 
     public UserResponseDto(UserModel user) {
         this(
-                user.getUserID(),
+                user.getUserId(),
                 user.getUsername(),
                 user.getTasks().stream().map(TaskResponseDto::new).toList()
         );

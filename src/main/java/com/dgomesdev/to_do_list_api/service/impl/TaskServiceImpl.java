@@ -12,6 +12,7 @@ import com.dgomesdev.to_do_list_api.service.interfaces.TaskService;
 import jakarta.transaction.Transactional;
 import org.springframework.stereotype.Service;
 
+import java.util.Objects;
 import java.util.UUID;
 
 @Service
@@ -40,29 +41,33 @@ public class TaskServiceImpl extends BaseServiceImpl implements TaskService {
     public TaskModel findTaskById(UUID taskId) {
         var task = taskRepository.findById(taskId)
                 .orElseThrow(TaskNotFoundException::new);
-        if (!task.getUser().getId().toString().equals(this.getUserId()) && !this.getUserAuthorities().contains(UserAuthority.ADMIN))
-            throw new UnauthorizedUserException();
+
+        if (
+                task.getUser().getId() != null
+                && !task.getUser().getId().toString().equals(this.getUserId())
+                && !this.getUserAuthorities().contains(UserAuthority.ADMIN)
+        ) throw new UnauthorizedUserException();
         return new TaskModel(task);
     }
 
     @Override
-    public TaskModel updateTask(TaskModel task, UUID taskId) {
+    public TaskModel updateTask(UUID taskId, TaskModel task) {
         var existingTask = taskRepository.findById(taskId)
                 .orElseThrow(TaskNotFoundException::new);
 
         if (!existingTask.getUser().getId().toString().equals(this.getUserId()) && !this.getUserAuthorities().contains(UserAuthority.ADMIN))
             throw new UnauthorizedUserException();
 
-        if (!existingTask.getTitle().equals(task.getTitle())) {
+        if (!Objects.equals(existingTask.getTitle(), task.getTitle())) {
             existingTask.setTitle(task.getTitle());
         }
-        if (!existingTask.getDescription().equals(task.getDescription())) {
+        if (!Objects.equals(existingTask.getDescription(), task.getDescription())) {
             existingTask.setDescription(task.getDescription());
         }
-        if (!existingTask.getPriority().equals(task.getPriority())) {
+        if (!Objects.equals(existingTask.getPriority(), task.getPriority())) {
             existingTask.setPriority(task.getPriority());
         }
-        if (!existingTask.getStatus().equals(task.getStatus())) {
+        if (!Objects.equals(existingTask.getStatus(), task.getStatus())) {
             existingTask.setStatus(task.getStatus());
         }
         var updatedTask = taskRepository.save(existingTask);
