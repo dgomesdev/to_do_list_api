@@ -1,14 +1,19 @@
-# Use an OpenJDK base image
-FROM eclipse-temurin:17-jdk-alpine
+# Use an OpenJDK image
+FROM openjdk:17-jdk-slim
 
 # Set the working directory
 WORKDIR /app
 
-# Copy the application JAR file
-COPY target/*.jar app.jar
+# Copy Gradle files and the source code
+COPY build.gradle settings.gradle gradlew ./
+COPY gradle ./gradle
+COPY src ./src
 
-# Expose the port that the application will run on
+# Build the project
+RUN ./gradlew build --no-daemon
+
+# Expose the port your app runs on
 EXPOSE 8080
 
-# Set the command to run the application
-ENTRYPOINT ["java", "-jar", "app.jar"]
+# Run the application
+CMD ["java", "-jar", "build/libs/your-application.jar"]
