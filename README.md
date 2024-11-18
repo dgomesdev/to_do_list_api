@@ -11,7 +11,6 @@ classDiagram
     class User {
         -UUID id
         -String username
-        -String email
         -String password
     }
     
