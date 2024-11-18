@@ -32,16 +32,13 @@ public class AuthFilter extends OncePerRequestFilter {
         if (!token.isBlank()) {
             var user = tokenService.getUserFromToken(token);
             Authentication authentication = new UsernamePasswordAuthenticationToken(user.getUserId(), null, user.getAuthorities());
-            System.out.println(authentication);
             SecurityContextHolder.getContext().setAuthentication(authentication);
         }
         filterChain.doFilter(request, response);
     }
 
-    private String recoverToken(HttpServletRequest request) throws IOException {
+    private String recoverToken(HttpServletRequest request) {
         var authHeader = request.getHeader("Authorization");
-        System.out.println(authHeader);
-        if (authHeader == null) throw new IOException("The token is null.");
-        return authHeader.replace("Bearer ", "");
+        return (authHeader != null) ? authHeader.replace("Bearer ", "") : "";
     }
 }
