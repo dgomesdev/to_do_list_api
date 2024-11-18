@@ -1,0 +1,15 @@
+services:
+  - type: web
+    name: spring-boot-app
+    env: docker
+    plan: free
+    dockerfilePath: ./Dockerfile
+    buildCommand: "./mvnw package"
+    startCommand: "java -jar app.jar"
+    envVars:
+      - key: SPRING_DATASOURCE_URL
+        value: jdbc:postgresql://<DATABASE_HOST>:5432/<DATABASE_NAME>
+      - key: SPRING_DATASOURCE_USERNAME
+        value: <DATABASE_USER>
+      - key: SPRING_DATASOURCE_PASSWORD
+        value: <DATABASE_PASSWORD>
