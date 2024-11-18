@@ -1,19 +1,21 @@
-# Use an OpenJDK image
-FROM openjdk:17-jdk-slim
+# Stage 1: Build the application
+FROM gradle:7.5.1-jdk17 AS builder
+WORKDIR /app
+# Copy all project files into the container
+COPY --chown=gradle:gradle . .
 
-# Set the working directory
+# Build the project and create the JAR file
+RUN ./gradlew build --no-daemon
+
+# Stage 2: Create the runtime image
+FROM openjdk:17-jdk-slim
 WORKDIR /app
 
-# Copy Gradle files and the source code
-COPY build.gradle settings.gradle gradlew ./
-COPY gradle ./gradle
-COPY src ./src
-
-# Build the project
-RUN ./gradlew build --no-daemon
+# Copy the JAR file from the build stage
+COPY --from=builder /app/build/libs/*.jar app.jar
 
 # Expose the port your app runs on
 EXPOSE 8080
 
-# Run the application
-CMD ["java", "-jar", "build/libs/your-application.jar"]
+# Specify the default command to run the application
+CMD ["java", "-jar", "app.jar"]
