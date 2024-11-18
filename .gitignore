@@ -39,4 +39,4 @@ out/
 # Ignore sensitive configuration files
 *.yml
 *.properties
-.env
+*.env
