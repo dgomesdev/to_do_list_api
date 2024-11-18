@@ -28,6 +28,7 @@ public class AuthFilter extends OncePerRequestFilter {
             @NonNull FilterChain filterChain
     ) throws ServletException, IOException {
         var token = recoverToken(request);
+        System.out.println(token);
         if (!token.isBlank()) {
             var user = tokenService.getUserFromToken(token);
             Authentication authentication = new UsernamePasswordAuthenticationToken(user.getUserId(), null, user.getAuthorities());
@@ -39,6 +40,7 @@ public class AuthFilter extends OncePerRequestFilter {
 
     private String recoverToken(HttpServletRequest request) throws IOException {
         var authHeader = request.getHeader("Authorization");
+        System.out.println(authHeader);
         if (authHeader == null) throw new IOException("The token is null.");
         return authHeader.replace("Bearer ", "");
     }

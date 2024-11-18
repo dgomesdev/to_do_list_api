@@ -100,7 +100,7 @@ class TaskServiceImplTest {
         RuntimeException exception = assertThrows(RuntimeException.class, () -> taskService.saveTask(null));
 
         //THEN
-        assertEquals("Invalid task: Cannot invoke \"com.dgomesdev.to_do_list_api.domain.model.TaskModel.getTitle()\" because \"task\" is null", exception.getMessage());
+        assertEquals("Cannot invoke \"com.dgomesdev.to_do_list_api.domain.model.TaskModel.getTitle()\" because \"task\" is null", exception.getMessage());
         verify(userRepository, times(1)).findById(userId);
         verify(taskRepository, times(0)).save(any(TaskEntity.class));
     }
@@ -118,7 +118,7 @@ class TaskServiceImplTest {
 
         //THEN
         assertEquals(mockTaskModel.getTitle(), response.getTitle());
-        verify(taskRepository, times(1)).findById(userId);
+        verify(taskRepository, times(1)).findById(taskId);
     }
 
     @Test

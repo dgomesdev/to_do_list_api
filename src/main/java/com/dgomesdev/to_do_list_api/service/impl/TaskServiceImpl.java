@@ -29,12 +29,8 @@ public class TaskServiceImpl extends BaseServiceImpl implements TaskService {
 
     @Override
     public TaskModel saveTask(TaskModel task) {
-        try {
             var user = userRepository.findById(UUID.fromString(getUserId())).orElseThrow(UserNotFoundException::new);
             return new TaskModel(taskRepository.save(new TaskEntity(task, user)));
-        } catch (Exception e) {
-            throw new RuntimeException("Invalid task: " + e.getLocalizedMessage());
-        }
     }
 
     @Override
