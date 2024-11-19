@@ -75,7 +75,7 @@ class TaskControllerTest {
         Exception exception = assertThrows(NullPointerException.class, () -> taskController.saveTask(invalidTask));
 
         //THEN
-        assertEquals("Cannot invoke \"com.dgomesdev.to_do_list_api.domain.model.TaskModel.getId()\" because \"task\" is null", exception.getMessage());
+        assertEquals("Cannot invoke \"com.dgomesdev.to_do_list_api.domain.model.TaskModel.getTaskId()\" because \"task\" is null", exception.getMessage());
 
     }
 
@@ -105,7 +105,7 @@ class TaskControllerTest {
         exception = assertThrows(NullPointerException.class, () ->taskController.findTaskById(null));
 
         //THEN
-        assertEquals("Cannot invoke \"com.dgomesdev.to_do_list_api.domain.model.TaskModel.getId()\" because \"task\" is null", exception.getMessage());
+        assertEquals("Cannot invoke \"com.dgomesdev.to_do_list_api.domain.model.TaskModel.getTaskId()\" because \"task\" is null", exception.getMessage());
     }
 
     @Test
@@ -134,7 +134,7 @@ class TaskControllerTest {
         exception = assertThrows(NullPointerException.class, () ->taskController.updateTask(null, taskRequestDto));
 
         //THEN
-        assertEquals("Cannot invoke \"com.dgomesdev.to_do_list_api.domain.model.TaskModel.getId()\" because \"task\" is null", exception.getMessage());
+        assertEquals("Cannot invoke \"com.dgomesdev.to_do_list_api.domain.model.TaskModel.getTaskId()\" because \"task\" is null", exception.getMessage());
     }
 
     @Test
