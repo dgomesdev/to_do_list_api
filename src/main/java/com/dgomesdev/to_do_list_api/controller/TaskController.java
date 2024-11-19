@@ -3,7 +3,6 @@ package com.dgomesdev.to_do_list_api.controller;
 import com.dgomesdev.to_do_list_api.domain.model.TaskModel;
 import com.dgomesdev.to_do_list_api.dto.request.TaskRequestDto;
 import com.dgomesdev.to_do_list_api.dto.response.MessageDto;
-import com.dgomesdev.to_do_list_api.dto.response.ResponseDto;
 import com.dgomesdev.to_do_list_api.dto.response.TaskResponseDto;
 import com.dgomesdev.to_do_list_api.service.interfaces.TaskService;
 import io.swagger.v3.oas.annotations.Operation;
@@ -33,7 +32,7 @@ public class TaskController {
             @ApiResponse(responseCode = "201", description = "Task saved"),
             @ApiResponse(responseCode = "500", description = "Error while saving the task"),
     })
-    public ResponseEntity<ResponseDto> saveTask(@RequestBody @Valid TaskRequestDto taskRequestDto) {
+    public ResponseEntity<TaskResponseDto> saveTask(@RequestBody @Valid TaskRequestDto taskRequestDto) {
             var newTask = taskService.saveTask(new TaskModel(taskRequestDto));
             return ResponseEntity
                     .status(HttpStatus.CREATED)
@@ -48,7 +47,7 @@ public class TaskController {
             @ApiResponse(responseCode = "404", description = "Task not found"),
             @ApiResponse(responseCode = "500", description = "Error while saving the task")
     })
-    public ResponseEntity<ResponseDto> findTaskById(@PathVariable UUID taskId) {
+    public ResponseEntity<TaskResponseDto> findTaskById(@PathVariable UUID taskId) {
             var foundTask = taskService.findTaskById(taskId);
             return ResponseEntity
                     .status(HttpStatus.OK)
@@ -63,7 +62,7 @@ public class TaskController {
             @ApiResponse(responseCode = "404", description = "Task not found"),
             @ApiResponse(responseCode = "500", description = "Error while updating the task"),
     })
-    public ResponseEntity<ResponseDto> updateTask(
+    public ResponseEntity<TaskResponseDto> updateTask(
             @PathVariable UUID taskId,
             @RequestBody @Valid TaskRequestDto taskRequestDto
     ) {
@@ -81,7 +80,7 @@ public class TaskController {
             @ApiResponse(responseCode = "404", description = "Task not found"),
             @ApiResponse(responseCode = "500", description = "Error while deleting the task")
     })
-    public ResponseEntity<ResponseDto> deleteTask(@PathVariable UUID taskId) {
+    public ResponseEntity<MessageDto> deleteTask(@PathVariable UUID taskId) {
             if (taskId != null )taskService.deleteTask(taskId);
             else throw new NullPointerException("taskId cannot be null");
             return ResponseEntity

@@ -4,7 +4,6 @@ import com.dgomesdev.to_do_list_api.domain.model.UserAuthority;
 import com.dgomesdev.to_do_list_api.domain.model.UserModel;
 import com.dgomesdev.to_do_list_api.dto.request.UserRequestDto;
 import com.dgomesdev.to_do_list_api.dto.response.MessageDto;
-import com.dgomesdev.to_do_list_api.dto.response.ResponseDto;
 import com.dgomesdev.to_do_list_api.dto.response.UserResponseDto;
 import com.dgomesdev.to_do_list_api.service.interfaces.UserService;
 import io.swagger.v3.oas.annotations.Operation;
@@ -39,7 +38,7 @@ public class UserController {
             @ApiResponse(responseCode = "404", description = "User not found"),
             @ApiResponse(responseCode = "500", description = "Error while finding the user")
     })
-    public ResponseEntity<ResponseDto> findUserById(@PathVariable UUID userId) {
+    public ResponseEntity<UserResponseDto> findUserById(@PathVariable UUID userId) {
         var user = userService.findUserById(userId);
         return ResponseEntity
                 .status(HttpStatus.OK)
@@ -55,7 +54,7 @@ public class UserController {
             @ApiResponse(responseCode = "400", description = "Invalid user"),
             @ApiResponse(responseCode = "500", description = "Error while updating the user")
     })
-    public ResponseEntity<ResponseDto> updateUser(
+    public ResponseEntity<UserResponseDto> updateUser(
             @PathVariable UUID userId,
             @RequestBody @Valid UserRequestDto user
     ) {
@@ -74,7 +73,7 @@ public class UserController {
             @ApiResponse(responseCode = "404", description = "User not found"),
             @ApiResponse(responseCode = "500", description = "Error while deleting the user")
     })
-    public ResponseEntity<ResponseDto> deleteUser(@PathVariable UUID userId) {
+    public ResponseEntity<MessageDto> deleteUser(@PathVariable UUID userId) {
         if (userId != null) userService.deleteUser(userId);
         else throw new NullPointerException("userId cannot be null");
         return ResponseEntity

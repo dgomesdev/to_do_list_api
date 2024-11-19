@@ -13,7 +13,7 @@ import java.util.UUID;
 public class UserModel extends User {
 
     private UUID userId;
-    private List<TaskModel> tasks;
+    private List<TaskModel> tasks = List.of();
 
     public UserModel(String username, String password, Set<UserAuthority> userAuthorities) {
         super(

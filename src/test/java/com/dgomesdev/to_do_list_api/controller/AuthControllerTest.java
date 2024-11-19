@@ -3,7 +3,7 @@ package com.dgomesdev.to_do_list_api.controller;
 import com.dgomesdev.to_do_list_api.domain.model.UserAuthority;
 import com.dgomesdev.to_do_list_api.domain.model.UserModel;
 import com.dgomesdev.to_do_list_api.dto.request.UserRequestDto;
-import com.dgomesdev.to_do_list_api.dto.response.MessageDto;
+import com.dgomesdev.to_do_list_api.dto.response.AuthResponseDto;
 import com.dgomesdev.to_do_list_api.service.interfaces.TokenService;
 import com.dgomesdev.to_do_list_api.service.interfaces.UserService;
 import org.junit.jupiter.api.DisplayName;
@@ -60,9 +60,9 @@ public class AuthControllerTest {
 
         //THEN
         assertEquals(HttpStatus.CREATED, response.getStatusCode());
-        MessageDto responseBody = (MessageDto) response.getBody();
+        AuthResponseDto responseBody = (AuthResponseDto) response.getBody();
         assertNotNull(responseBody);
-        assertEquals("User registered successfully. Token: " + token, responseBody.message());
+        assertEquals(token, responseBody.token());
     }
 
     @Test
@@ -91,9 +91,9 @@ public class AuthControllerTest {
 
         //THEN
         assertEquals(HttpStatus.OK, response.getStatusCode());
-        MessageDto responseBody = (MessageDto) response.getBody();
+        AuthResponseDto responseBody = (AuthResponseDto) response.getBody();
         assertNotNull(responseBody);
-        assertEquals("Login successful for user " + userRequestDto.username() + " with token " + token , responseBody.message());
+        assertEquals(token , responseBody.token());
     }
 
     @Test

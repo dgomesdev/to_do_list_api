@@ -17,11 +17,9 @@ public abstract class BaseServiceImpl {
     }
 
     protected List<UserAuthority> getUserAuthorities() {
-        var userAuthorities = getSecurityContextAuthentication().getAuthorities()
+        return getSecurityContextAuthentication().getAuthorities()
                 .stream()
                 .map(authority -> UserAuthority.valueOf(authority.getAuthority()))
                 .toList();
-        System.out.println(userAuthorities);
-        return userAuthorities;
     }
 }

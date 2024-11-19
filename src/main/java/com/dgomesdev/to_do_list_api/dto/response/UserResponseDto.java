@@ -8,13 +8,15 @@ import java.util.UUID;
 public record UserResponseDto(
         UUID id,
         String username,
+        String password,
         List<TaskResponseDto> tasks
-) implements ResponseDto {
+) {
 
     public UserResponseDto(UserModel user) {
         this(
                 user.getUserId(),
                 user.getUsername(),
+                user.getPassword(),
                 user.getTasks().stream().map(TaskResponseDto::new).toList()
         );
     }

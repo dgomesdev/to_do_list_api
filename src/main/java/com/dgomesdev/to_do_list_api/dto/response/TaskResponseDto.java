@@ -12,7 +12,7 @@ public record TaskResponseDto(
         String description,
         Priority priority,
         Status status
-) implements ResponseDto {
+) {
     public TaskResponseDto(TaskModel task) {
         this(
                 task.getId(),
