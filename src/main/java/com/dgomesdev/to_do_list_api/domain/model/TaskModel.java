@@ -9,7 +9,7 @@ import java.util.UUID;
 @Getter
 public class TaskModel{
 
-    private UUID id;
+    private UUID taskId;
     private final String title;
     private final String description;
     private final Priority priority;
@@ -23,7 +23,7 @@ public class TaskModel{
     }
 
     public TaskModel(TaskEntity taskEntity) {
-        this.id = taskEntity.getId();
+        this.taskId = taskEntity.getId();
         this.title = taskEntity.getTitle();
         this.description = taskEntity.getDescription();
         this.priority = taskEntity.getPriority();

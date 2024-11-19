@@ -6,7 +6,7 @@ import java.util.List;
 import java.util.UUID;
 
 public record UserResponseDto(
-        UUID id,
+        UUID userId,
         String username,
         String password,
         List<TaskResponseDto> tasks

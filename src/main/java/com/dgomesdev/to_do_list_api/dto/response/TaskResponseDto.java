@@ -7,7 +7,7 @@ import com.dgomesdev.to_do_list_api.domain.model.TaskModel;
 import java.util.UUID;
 
 public record TaskResponseDto(
-        UUID id,
+        UUID taskId,
         String title,
         String description,
         Priority priority,
@@ -15,7 +15,7 @@ public record TaskResponseDto(
 ) {
     public TaskResponseDto(TaskModel task) {
         this(
-                task.getId(),
+                task.getTaskId(),
                 task.getTitle(),
                 task.getDescription(),
                 task.getPriority(),
