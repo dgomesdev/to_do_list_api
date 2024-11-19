@@ -2,7 +2,6 @@ package com.dgomesdev.to_do_list_api.service.impl;
 
 import com.auth0.jwt.JWT;
 import com.auth0.jwt.algorithms.Algorithm;
-import com.auth0.jwt.exceptions.JWTVerificationException;
 import com.auth0.jwt.interfaces.DecodedJWT;
 import com.dgomesdev.to_do_list_api.domain.model.UserAuthority;
 import com.dgomesdev.to_do_list_api.domain.model.UserModel;
@@ -12,7 +11,6 @@ import org.springframework.stereotype.Service;
 
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
-import java.util.Date;
 import java.util.Set;
 import java.util.UUID;
 import java.util.stream.Collectors;
@@ -54,17 +52,12 @@ public class TokenServiceImpl implements TokenService {
     }
 
     private DecodedJWT validateToken(String token) {
-        var decodedToken = JWT
+
+        return JWT
                 .require(buildAlgorithm(secret))
                 .withIssuer("to_do_list_api")
                 .build()
                 .verify(token);
-
-        if (decodedToken.getExpiresAt().before(new Date())) {
-            throw new JWTVerificationException("Token is expired.");
-        }
-
-        return decodedToken;
     }
 
     private Instant getTokenExpirationDate () {

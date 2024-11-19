@@ -66,7 +66,6 @@ public class AuthController {
             Authentication authentication = authenticationManager.authenticate(
                     new UsernamePasswordAuthenticationToken(user.username(), user.password())
             );
-            System.out.println(authentication);
             var loggedUser = (UserModel) authentication.getPrincipal();
             var token = tokenService.generateToken(loggedUser);
             return ResponseEntity
