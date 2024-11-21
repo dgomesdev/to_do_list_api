@@ -33,7 +33,7 @@ public class TaskController {
             @ApiResponse(responseCode = "500", description = "Error while saving the task"),
     })
     public ResponseEntity<TaskResponseDto> saveTask(@RequestBody @Valid TaskRequestDto taskRequestDto) {
-            var newTask = taskService.saveTask(new TaskModel(taskRequestDto));
+            var newTask = taskService.saveTask(new TaskModel.Builder().fromRequest(taskRequestDto).build());
             return ResponseEntity
                     .status(HttpStatus.CREATED)
                     .body(new TaskResponseDto(newTask));
@@ -66,7 +66,9 @@ public class TaskController {
             @PathVariable UUID taskId,
             @RequestBody @Valid TaskRequestDto taskRequestDto
     ) {
-            var updatedTask = taskService.updateTask(taskId, new TaskModel(taskRequestDto));
+            var updatedTask = taskService.updateTask(
+                    taskId,
+                    new TaskModel.Builder().fromRequest(taskRequestDto).build());
             return ResponseEntity
                     .status(HttpStatus.OK)
                     .body(new TaskResponseDto(updatedTask));

@@ -28,14 +28,17 @@ public class UserServiceImpl extends BaseServiceImpl implements UserService, Use
 
     @Override
     public UserModel saveUser(UserModel newUser) {
-            return new UserModel(userRepository.save(new UserEntity(newUser)));
+        return new UserModel.Builder()
+                .fromEntity(userRepository.save(new UserEntity(newUser)))
+                .build();
     }
 
     @Override
     public UserModel findUserById(UUID userId) {
         if (!userId.toString().equals(this.getUserId())) throw new UnauthorizedUserException();
-        return new UserModel(userRepository.findById(userId)
-                .orElseThrow(UserNotFoundException::new));
+        return new UserModel.Builder()
+                .fromEntity(userRepository.findById(userId).orElseThrow(UserNotFoundException::new))
+                .build();
     }
 
     @Override
@@ -62,7 +65,9 @@ public class UserServiceImpl extends BaseServiceImpl implements UserService, Use
 
         var updatedUser = userRepository.save(existingUser);
 
-        return new UserModel(updatedUser);
+        return new UserModel.Builder()
+                .fromEntity(updatedUser)
+                .build();
     }
 
 
@@ -78,6 +83,8 @@ public class UserServiceImpl extends BaseServiceImpl implements UserService, Use
     public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
         var user = userRepository.findUserByUsername(username)
                 .orElseThrow(() -> new UsernameNotFoundException("User not found with username: " + username));
-        return new UserModel(user);
+        return new UserModel.Builder()
+                .fromEntity(user)
+                .build();
     }
 }

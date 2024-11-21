@@ -53,17 +53,17 @@ class TaskServiceImplTest {
 
     private final UUID userId = UUID.randomUUID();
     private final UUID taskId = UUID.randomUUID();
-    private final Authentication authentication = new UsernamePasswordAuthenticationToken(
-            userId,
-            null,
-            Set.of(UserAuthority.USER)
-                    .stream()
-                    .map(userAuthority -> new SimpleGrantedAuthority(userAuthority.name()))
-                    .toList()
-    );
 
     @BeforeEach
     void setup() {
+        Authentication authentication = new UsernamePasswordAuthenticationToken(
+                userId,
+                null,
+                Set.of(UserAuthority.USER)
+                        .stream()
+                        .map(userAuthority -> new SimpleGrantedAuthority(userAuthority.name()))
+                        .toList()
+        );
         SecurityContext securityContext = SecurityContextHolder.createEmptyContext();
         securityContext.setAuthentication(authentication);
         SecurityContextHolder.setContext(securityContext);

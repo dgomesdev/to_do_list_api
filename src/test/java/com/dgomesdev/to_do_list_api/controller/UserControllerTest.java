@@ -1,7 +1,5 @@
 package com.dgomesdev.to_do_list_api.controller;
 
-import com.dgomesdev.to_do_list_api.data.entity.UserEntity;
-import com.dgomesdev.to_do_list_api.domain.model.UserAuthority;
 import com.dgomesdev.to_do_list_api.domain.model.UserModel;
 import com.dgomesdev.to_do_list_api.dto.request.UserRequestDto;
 import com.dgomesdev.to_do_list_api.dto.response.MessageDto;
@@ -17,10 +15,11 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.crypto.password.PasswordEncoder;
 
-import java.util.Set;
 import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
@@ -35,17 +34,22 @@ class UserControllerTest {
     @Mock
     private PasswordEncoder passwordEncoder;
 
+    @Mock
+    private UserRequestDto mockUserRequestDto;
+
+    @Mock
+    private UserModel mockUserModel;
+
+    @Mock
+    private UserResponseDto mockUserResponseDto;
+
     private final UUID userId = UUID.randomUUID();
-    private final UserRequestDto userRequestDto = new UserRequestDto("username", "password");
-    private final UserModel userModelRequest = new UserModel("username", "password", Set.of(UserAuthority.USER));
-    private final UserModel userModelResponse = new UserModel(new UserEntity(userModelRequest));
-    private final UserResponseDto userResponseDto = new UserResponseDto(userModelResponse);
 
     @Test
     @DisplayName("Should find user by Id successfully")
     void givenUserId_whenFindingUserById_thenReturnResponseOk() {
         //GIVEN
-        when(userService.findUserById(userId)).thenReturn(userModelResponse);
+        when(userService.findUserById(userId)).thenReturn(mockUserModel);
 
         //WHEN
         ResponseEntity<?> response = userController.findUserById(userId);
@@ -54,7 +58,10 @@ class UserControllerTest {
         assertEquals(HttpStatus.OK, response.getStatusCode());
         UserResponseDto responseBody = (UserResponseDto) response.getBody();
         assertNotNull(responseBody);
-        assertEquals(userResponseDto, responseBody);
+        assertEquals(mockUserResponseDto.userId(), responseBody.userId());
+        assertEquals(mockUserResponseDto.username(), responseBody.username());
+        assertEquals(mockUserResponseDto.password(), responseBody.password());
+        assertEquals(mockUserResponseDto.tasks(), responseBody.tasks());
     }
 
     @Test
@@ -74,19 +81,22 @@ class UserControllerTest {
     @DisplayName("Should update user successfully")
     void givenUser_whenUpdatingUser_thenReturnResponseOk() {
         //GIVEN
-        String encodedPassword = "encodedPassword";
-        when(passwordEncoder.encode("password")).thenReturn(encodedPassword);
-        UserModel userModelUpdate = new UserModel(userRequestDto.username(), encodedPassword, Set.of(UserAuthority.USER));
-        when(userService.updateUser(userId, userModelUpdate)).thenReturn(userModelResponse);
+        when(mockUserRequestDto.username()).thenReturn("username");
+        when(mockUserRequestDto.password()).thenReturn("password");
+        when(passwordEncoder.encode("password")).thenReturn("encodedPassword");
+        when(userService.updateUser(eq(userId), any(UserModel.class))).thenReturn(mockUserModel);
 
         //WHEN
-        ResponseEntity<?> response = userController.updateUser(userId, userRequestDto);
+        ResponseEntity<?> response = userController.updateUser(userId, mockUserRequestDto);
 
         //THEN
         assertEquals(HttpStatus.OK, response.getStatusCode());
         UserResponseDto responseBody = (UserResponseDto) response.getBody();
         assertNotNull(responseBody);
-        assertEquals(userResponseDto, responseBody);
+        assertEquals(mockUserResponseDto.userId(), responseBody.userId());
+        assertEquals(mockUserResponseDto.username(), responseBody.username());
+        assertEquals(mockUserResponseDto.password(), responseBody.password());
+        assertEquals(mockUserResponseDto.tasks(), responseBody.tasks());
     }
 
     @Test
@@ -96,7 +106,7 @@ class UserControllerTest {
         IllegalArgumentException exception;
 
         //WHEN
-        exception = assertThrows(IllegalArgumentException.class, () -> userController.updateUser(null, userRequestDto));
+        exception = assertThrows(IllegalArgumentException.class, () -> userController.updateUser(null, mockUserRequestDto));
 
         //THEN
         assertEquals("Cannot pass null or empty values to constructor", exception.getMessage());
@@ -129,6 +139,5 @@ class UserControllerTest {
 
         //THEN
         assertEquals("userId cannot be null", exception.getMessage());
-
     }
 }

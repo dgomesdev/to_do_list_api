@@ -48,7 +48,11 @@ public class TokenServiceImpl implements TokenService {
                     .map(UserAuthority::valueOf)
                     .collect(Collectors.toSet());
 
-            return new UserModel(userId, username, userAuthorities);
+            return new UserModel.Builder()
+                    .withUserId(userId)
+                    .withUsername(username)
+                    .withUserAuthorities(userAuthorities)
+                    .build();
     }
 
     private DecodedJWT validateToken(String token) {

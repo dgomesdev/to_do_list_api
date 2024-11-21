@@ -1,6 +1,5 @@
 package com.dgomesdev.to_do_list_api.controller;
 
-import com.dgomesdev.to_do_list_api.domain.model.UserAuthority;
 import com.dgomesdev.to_do_list_api.domain.model.UserModel;
 import com.dgomesdev.to_do_list_api.dto.request.UserRequestDto;
 import com.dgomesdev.to_do_list_api.dto.response.AuthResponseDto;
@@ -18,8 +17,6 @@ import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.crypto.password.PasswordEncoder;
-
-import java.util.Set;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
@@ -43,20 +40,29 @@ public class AuthControllerTest {
     @Mock
     private PasswordEncoder passwordEncoder;
 
-    private final UserRequestDto userRequestDto = new UserRequestDto("username", "password");
-    private final UserModel userModelResponse = new UserModel("username", "password", Set.of(UserAuthority.USER));
+    @Mock
+    Authentication mockAuthentication;
+
+    @Mock
+    private UserRequestDto mockUserRequestDto;
+
+    @Mock
+    private UserModel mockUserModel;
+
     private final String token = "sample token";
 
     @Test
     @DisplayName("Should register user successfully")
     public void givenNewUser_whenRegisteringUser_returnResponseCreated() {
         //GIVEN
+        when(mockUserRequestDto.username()).thenReturn("username");
+        when(mockUserRequestDto.password()).thenReturn("password");
         when(passwordEncoder.encode("password")).thenReturn("encodedPassword");
-        when(userService.saveUser(any(UserModel.class))).thenReturn(userModelResponse);
-        when(tokenService.generateToken(userModelResponse)).thenReturn(token);
+        when(userService.saveUser(any(UserModel.class))).thenReturn(mockUserModel);
+        when(tokenService.generateToken(mockUserModel)).thenReturn(token);
 
         //WHEN
-        ResponseEntity<?> response = authController.register(userRequestDto);
+        ResponseEntity<?> response = authController.register(mockUserRequestDto);
 
         //THEN
         assertEquals(HttpStatus.CREATED, response.getStatusCode());
@@ -69,10 +75,10 @@ public class AuthControllerTest {
     @DisplayName("Should throw an exception when trying to register an invalid user")
     public void givenInvalidUser_whenRegisteringUser_throwException() {
         //GIVEN
-        var invalidUser = new UserRequestDto("", "123");
+        IllegalArgumentException exception;
 
         //WHEN
-        IllegalArgumentException exception = assertThrows(IllegalArgumentException.class, () -> authController.register(invalidUser));
+        exception = assertThrows(IllegalArgumentException.class, () -> authController.register(mockUserRequestDto));
 
         //THEN
         assertEquals("Cannot pass null or empty values to constructor", exception.getMessage());
@@ -82,12 +88,12 @@ public class AuthControllerTest {
     @DisplayName("Should log in user successfully")
     public void givenValidAttributes_whenLoggingInUser_thenReturnResponseOk() {
         //GIVEN
-        Authentication authentication = new UsernamePasswordAuthenticationToken(userModelResponse, userModelResponse.getPassword());
-        when(authenticationManager.authenticate(any())).thenReturn(authentication);
-        when(tokenService.generateToken(userModelResponse)).thenReturn(token);
+        when(authenticationManager.authenticate(any(UsernamePasswordAuthenticationToken.class))).thenReturn(mockAuthentication);
+        when(mockAuthentication.getPrincipal()).thenReturn(mockUserModel);
+        when(tokenService.generateToken(mockUserModel)).thenReturn(token);
 
         //WHEN
-        ResponseEntity<?> response = authController.login(userRequestDto);
+        ResponseEntity<?> response = authController.login(mockUserRequestDto);
 
         //THEN
         assertEquals(HttpStatus.OK, response.getStatusCode());

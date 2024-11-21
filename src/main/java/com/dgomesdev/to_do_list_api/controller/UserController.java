@@ -59,7 +59,14 @@ public class UserController {
             @RequestBody @Valid UserRequestDto user
     ) {
         var encodedPassword = passwordEncoder.encode(user.password());
-        var updatedUser = userService.updateUser(userId, new UserModel(user.username(), encodedPassword, Set.of(UserAuthority.USER)));
+        var updatedUser = userService.updateUser(
+                userId,
+                new UserModel.Builder()
+                        .withUsername(user.username())
+                        .withPassword(encodedPassword)
+                        .withUserAuthorities(Set.of(UserAuthority.USER))
+                        .build()
+        );
         return ResponseEntity
                 .status(HttpStatus.OK)
                 .body(new UserResponseDto(updatedUser));

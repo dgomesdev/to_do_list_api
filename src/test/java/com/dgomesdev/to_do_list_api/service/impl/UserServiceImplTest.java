@@ -16,6 +16,7 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.context.SecurityContext;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
@@ -37,15 +38,24 @@ class UserServiceImplTest {
     @Mock
     private UserRepository userRepository;
 
-    private final UUID userId = UUID.randomUUID();
-    private final UserModel userModelRequest = new UserModel("username", "password", Set.of(UserAuthority.USER));
-    private final UserEntity userEntityResponse = new UserEntity(userModelRequest);
-    private final UserModel userModelResponse = new UserModel(userEntityResponse);
+    @Mock
+    private UserModel mockUserModel;
 
-    Authentication authentication = new UsernamePasswordAuthenticationToken(userId, null, userModelRequest.getAuthorities());
+    @Mock
+    private UserEntity mockUserEntity;
+
+    private final UUID userId = UUID.randomUUID();
 
     @BeforeEach
     void setup() {
+        Authentication authentication = new UsernamePasswordAuthenticationToken(
+                userId,
+                null,
+                Set.of(UserAuthority.USER)
+                        .stream()
+                        .map(userAuthority -> new SimpleGrantedAuthority(userAuthority.name()))
+                        .toList()
+        );
         SecurityContext securityContext = SecurityContextHolder.createEmptyContext();
         securityContext.setAuthentication(authentication);
         SecurityContextHolder.setContext(securityContext);
@@ -56,18 +66,22 @@ class UserServiceImplTest {
         SecurityContextHolder.clearContext();
     }
 
-
     @Test
     @DisplayName("Should save user successfully")
     void givenValidUser_whenSavingUser_ThenReturnSavedUser() {
         //GIVEN
-        when(userRepository.save(any(UserEntity.class))).thenReturn(userEntityResponse);
+        when(userRepository.save(any(UserEntity.class))).thenReturn(mockUserEntity);
+        when(mockUserEntity.getUsername()).thenReturn("username");
+        when(mockUserEntity.getPassword()).thenReturn("password");
+        when(mockUserEntity.getUserAuthorities()).thenReturn(Set.of(UserAuthority.USER));
 
         //WHEN
-        UserModel response = userService.saveUser(userModelRequest);
+        UserModel response = userService.saveUser(mockUserModel);
 
         //THEN
-        assertEquals(userModelResponse, response);
+        assertEquals("username", response.getUsername());
+        assertEquals("password", response.getPassword());
+        assertEquals(mockUserModel.getTasks(), response.getTasks());
     }
 
     @Test
@@ -87,13 +101,18 @@ class UserServiceImplTest {
     @DisplayName("Should find an user by Id successfully")
     void givenValidUserId_whenFindUserByUserId_theReturnUser() {
         //GIVEN
-        when(userRepository.findById(userId)).thenReturn(Optional.of(userEntityResponse));
+        when(userRepository.findById(userId)).thenReturn(Optional.of(mockUserEntity));
+        when(mockUserEntity.getUsername()).thenReturn("username");
+        when(mockUserEntity.getPassword()).thenReturn("password");
+        when(mockUserEntity.getUserAuthorities()).thenReturn(Set.of(UserAuthority.USER));
 
         //WHEN
         UserModel response = userService.findUserById(userId);
 
         //THEN
-        assertEquals(userModelResponse, response);
+        assertEquals("username", response.getUsername());
+        assertEquals("password", response.getPassword());
+        assertEquals(mockUserModel.getTasks(), response.getTasks());
     }
 
     @Test
@@ -113,14 +132,19 @@ class UserServiceImplTest {
     @DisplayName("Should update user successfully")
     void givenValidUser_whenUpdatingUser_ThenReturnUpdatedUser() {
         //GIVEN
-        when(userRepository.findById(userId)).thenReturn(Optional.of(userEntityResponse));
-        when(userRepository.save(any(UserEntity.class))).thenReturn(userEntityResponse);
+        when(userRepository.findById(userId)).thenReturn(Optional.of(mockUserEntity));
+        when(userRepository.save(any(UserEntity.class))).thenReturn(mockUserEntity);
+        when(mockUserEntity.getUsername()).thenReturn("username");
+        when(mockUserEntity.getPassword()).thenReturn("password");
+        when(mockUserEntity.getUserAuthorities()).thenReturn(Set.of(UserAuthority.USER));
 
         //WHEN
-        UserModel response = userService.updateUser(userId, userModelRequest);
+        UserModel response = userService.updateUser(userId, mockUserModel);
 
         //THEN
-        assertEquals(userModelResponse, response);
+        assertEquals("username", response.getUsername());
+        assertEquals("password", response.getPassword());
+        assertEquals(mockUserModel.getTasks(), response.getTasks());
     }
 
     @Test
@@ -143,7 +167,7 @@ class UserServiceImplTest {
         UnauthorizedUserException exception;
 
         //WHEN
-        exception = assertThrows(UnauthorizedUserException.class, () -> userService.updateUser(UUID.randomUUID(), userModelRequest));
+        exception = assertThrows(UnauthorizedUserException.class, () -> userService.updateUser(UUID.randomUUID(), mockUserModel));
 
         // THEN
         assertEquals("Unauthorized user", exception.getMessage());
@@ -153,7 +177,7 @@ class UserServiceImplTest {
     @DisplayName("Should delete user successfully")
     void givenValidUserId_whenDeletingUser_thenDeleteUserSuccessfully() {
         //GIVEN
-        when(userRepository.findById(userId)).thenReturn(Optional.of(userEntityResponse));
+        when(userRepository.findById(userId)).thenReturn(Optional.of(mockUserEntity));
 
         //WHEN
         userService.deleteUser(userId);
@@ -193,13 +217,17 @@ class UserServiceImplTest {
     @DisplayName("Should find an user by username successfully")
     void givenValidUsername_whenFindUserByUserId_theReturnUser() {
         //GIVEN
-        when(userRepository.findUserByUsername("username")).thenReturn(Optional.of(userEntityResponse));
+        when(userRepository.findUserByUsername("username")).thenReturn(Optional.of(mockUserEntity));
+        when(mockUserEntity.getUsername()).thenReturn("username");
+        when(mockUserEntity.getPassword()).thenReturn("password");
+        when(mockUserEntity.getUserAuthorities()).thenReturn(Set.of(UserAuthority.USER));
 
         //WHEN
         var response = userService.loadUserByUsername("username");
 
         //THEN
-        assertEquals(userModelResponse, response);
+        assertEquals("username", response.getUsername());
+        assertEquals("password", response.getPassword());
     }
 
     @Test

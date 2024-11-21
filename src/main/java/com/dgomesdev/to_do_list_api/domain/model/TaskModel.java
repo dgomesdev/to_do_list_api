@@ -7,26 +7,48 @@ import lombok.Getter;
 import java.util.UUID;
 
 @Getter
-public class TaskModel{
+public class TaskModel {
 
-    private UUID taskId;
+    private final UUID taskId;
     private final String title;
     private final String description;
     private final Priority priority;
     private final Status status;
 
-    public TaskModel(TaskRequestDto taskRequestDto) {
-        this.title = taskRequestDto.title();
-        this.description = taskRequestDto.description();
-        this.priority = taskRequestDto.priority();
-        this.status = taskRequestDto.status();
+    private TaskModel(Builder builder) {
+        this.taskId = builder.taskId;
+        this.title = builder.title;
+        this.description = builder.description;
+        this.priority = builder.priority;
+        this.status = builder.status;
     }
 
-    public TaskModel(TaskEntity taskEntity) {
-        this.taskId = taskEntity.getId();
-        this.title = taskEntity.getTitle();
-        this.description = taskEntity.getDescription();
-        this.priority = taskEntity.getPriority();
-        this.status = taskEntity.getStatus();
+    public static class Builder {
+        private UUID taskId;
+        private String title;
+        private String description;
+        private Priority priority;
+        private Status status;
+
+        public Builder fromRequest(TaskRequestDto taskRequestDto) {
+            this.title = taskRequestDto.title();
+            this.description = taskRequestDto.description();
+            this.priority = taskRequestDto.priority();
+            this.status = taskRequestDto.status();
+            return this;
+        }
+
+        public Builder fromEntity(TaskEntity taskEntity) {
+            this.taskId = taskEntity.getId();
+            this.title = taskEntity.getTitle();
+            this.description = taskEntity.getDescription();
+            this.priority = taskEntity.getPriority();
+            this.status = taskEntity.getStatus();
+            return this;
+        }
+
+        public TaskModel build() {
+            return new TaskModel(this);
+        }
     }
 }

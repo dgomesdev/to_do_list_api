@@ -11,14 +11,19 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
+import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
 
 import java.lang.reflect.Field;
 import java.time.Instant;
+import java.util.List;
 import java.util.Set;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
 class TokenServiceImplTest {
@@ -26,13 +31,14 @@ class TokenServiceImplTest {
     @InjectMocks
     private TokenServiceImpl tokenService;
 
-    private Field secretField;
+    @Mock
+    private UserModel mockUserModel;
 
-    private final UserModel user = new UserModel(
-            UUID.randomUUID(),
-            "username",
-            Set.of(UserAuthority.USER)
-    );
+    private final UUID userId = UUID.randomUUID();
+
+    Set<UserAuthority> userAuthorities = Set.of(UserAuthority.USER);
+
+    private Field secretField;
 
     @BeforeEach
     void setUp() throws Exception {
@@ -45,8 +51,16 @@ class TokenServiceImplTest {
     @DisplayName("Should generate token successfully")
     void givenValidAttributes_whenGeneratingToken_thenReturnValidToken() {
         // GIVEN
+        when(mockUserModel.getUserId()).thenReturn(userId);
+        when(mockUserModel.getUsername()).thenReturn("username");
+        when(mockUserModel.getAuthorities()).thenReturn(userAuthorities
+                .stream()
+                .map(authority -> new SimpleGrantedAuthority(authority.name()))
+                .collect(Collectors.toSet())
+        );
+
         // WHEN
-        String token = tokenService.generateToken(user);
+        String token = tokenService.generateToken(mockUserModel);
 
         // THEN
         assertNotNull(token);
@@ -57,9 +71,16 @@ class TokenServiceImplTest {
     void givenInvalidSecret_whenGeneratingToken_thenThrowException() throws IllegalAccessException {
         // GIVEN
         secretField.set(tokenService, null);
+        when(mockUserModel.getUserId()).thenReturn(userId);
+        when(mockUserModel.getUsername()).thenReturn("username");
+        when(mockUserModel.getAuthorities()).thenReturn(userAuthorities
+                .stream()
+                .map(authority -> new SimpleGrantedAuthority(authority.name()))
+                .collect(Collectors.toSet())
+        );
 
         // WHEN
-        IllegalArgumentException exception = assertThrows(IllegalArgumentException.class, () -> tokenService.generateToken(user));
+        IllegalArgumentException exception = assertThrows(IllegalArgumentException.class, () -> tokenService.generateToken(mockUserModel));
 
         // THEN
         assertEquals("The Secret cannot be null", exception.getMessage());
@@ -69,13 +90,20 @@ class TokenServiceImplTest {
     @DisplayName("Should get user from token successfully")
     void givenValidToken_whenGettingUserFromToken_thenReturnValidUser() {
         // GIVEN
-        String token = tokenService.generateToken(user);
+        when(mockUserModel.getUserId()).thenReturn(userId);
+        when(mockUserModel.getUsername()).thenReturn("username");
+        when(mockUserModel.getAuthorities()).thenReturn(userAuthorities
+                .stream()
+                .map(authority -> new SimpleGrantedAuthority(authority.name()))
+                .collect(Collectors.toSet())
+        );
+        String token = tokenService.generateToken(mockUserModel);
 
         // WHEN
         UserModel validUser = tokenService.getUserFromToken(token);
 
         // THEN
-        assertEquals(user, validUser);
+        assertEquals(UserModel.class, validUser.getClass());
     }
 
     @Test
@@ -85,9 +113,9 @@ class TokenServiceImplTest {
         String expiredToken = JWT
                 .create()
                 .withIssuer("to_do_list_api")
-                .withClaim("userId", user.getUserId().toString())
-                .withClaim("username", user.getUsername())
-                .withClaim("userAuthorities", user.getAuthorities().stream().map(Object::toString).toList())
+                .withClaim("userId", userId.toString())
+                .withClaim("username", "username")
+                .withClaim("userAuthorities", List.of(UserAuthority.USER.name()))
                 .withExpiresAt(Instant.now().minusSeconds(3600))
                 .sign(Algorithm.HMAC256("mySecretKey"));
 

@@ -30,7 +30,9 @@ public class TaskServiceImpl extends BaseServiceImpl implements TaskService {
     @Override
     public TaskModel saveTask(TaskModel task) {
             var user = userRepository.findById(UUID.fromString(getUserId())).orElseThrow(UserNotFoundException::new);
-            return new TaskModel(taskRepository.save(new TaskEntity(task, user)));
+            return new TaskModel.Builder()
+                    .fromEntity(taskRepository.save(new TaskEntity(task, user)))
+                    .build();
     }
 
     @Override
@@ -43,7 +45,9 @@ public class TaskServiceImpl extends BaseServiceImpl implements TaskService {
                 && !task.getUser().getId().toString().equals(this.getUserId())
                 && !this.getUserAuthorities().contains(UserAuthority.ADMIN)
         ) throw new UnauthorizedUserException();
-        return new TaskModel(task);
+        return new TaskModel.Builder()
+                .fromEntity(task)
+                .build();
     }
 
     @Override
@@ -68,7 +72,9 @@ public class TaskServiceImpl extends BaseServiceImpl implements TaskService {
         }
         var updatedTask = taskRepository.save(existingTask);
 
-        return new TaskModel(updatedTask);
+        return new TaskModel.Builder()
+                .fromEntity(updatedTask)
+                .build();
     }
 
     @Override

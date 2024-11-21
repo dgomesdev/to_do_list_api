@@ -47,7 +47,12 @@ public class AuthController {
     })
     public ResponseEntity<AuthResponseDto> register(@RequestBody @Valid UserRequestDto user) {
             String encodedPassword = passwordEncoder.encode(user.password());
-            UserModel savedUser = userService.saveUser(new UserModel(user.username(), encodedPassword, Set.of(UserAuthority.USER)));
+            UserModel savedUser = userService.saveUser(new UserModel.Builder()
+                    .withUsername(user.username())
+                    .withPassword(encodedPassword)
+                    .withUserAuthorities(Set.of(UserAuthority.USER))
+                    .build()
+            );
             String token = tokenService.generateToken(savedUser);
             System.out.println(token);
             return ResponseEntity
