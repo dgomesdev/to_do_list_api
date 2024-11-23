@@ -29,7 +29,8 @@ public class TaskServiceImpl extends BaseServiceImpl implements TaskService {
 
     @Override
     public TaskModel saveTask(TaskModel task) {
-            var user = userRepository.findById(UUID.fromString(getUserId())).orElseThrow(UserNotFoundException::new);
+            UUID userId = UUID.fromString(getUserId());
+            var user = userRepository.findById(userId).orElseThrow(() -> new UserNotFoundException(userId));
             return new TaskModel.Builder()
                     .fromEntity(taskRepository.save(new TaskEntity(task, user)))
                     .build();
@@ -38,13 +39,12 @@ public class TaskServiceImpl extends BaseServiceImpl implements TaskService {
     @Override
     public TaskModel findTaskById(UUID taskId) {
         var task = taskRepository.findById(taskId)
-                .orElseThrow(TaskNotFoundException::new);
+                .orElseThrow(() -> new TaskNotFoundException(taskId));
 
         if (
-                task.getUser().getId() != null
-                && !task.getUser().getId().toString().equals(this.getUserId())
+                !task.getUser().getId().toString().equals(this.getUserId())
                 && !this.getUserAuthorities().contains(UserAuthority.ADMIN)
-        ) throw new UnauthorizedUserException();
+        ) throw new UnauthorizedUserException(UUID.fromString(getUserId()));
         return new TaskModel.Builder()
                 .fromEntity(task)
                 .build();
@@ -53,10 +53,10 @@ public class TaskServiceImpl extends BaseServiceImpl implements TaskService {
     @Override
     public TaskModel updateTask(UUID taskId, TaskModel task) {
         var existingTask = taskRepository.findById(taskId)
-                .orElseThrow(TaskNotFoundException::new);
+                .orElseThrow(() -> new TaskNotFoundException(taskId));
 
         if (!existingTask.getUser().getId().toString().equals(this.getUserId()) && !this.getUserAuthorities().contains(UserAuthority.ADMIN))
-            throw new UnauthorizedUserException();
+            throw new UnauthorizedUserException(UUID.fromString(getUserId()));
 
         if (!Objects.equals(existingTask.getTitle(), task.getTitle())) {
             existingTask.setTitle(task.getTitle());
@@ -79,9 +79,9 @@ public class TaskServiceImpl extends BaseServiceImpl implements TaskService {
 
     @Override
     public void deleteTask(UUID taskId) {
-        var task = taskRepository.findById(taskId).orElseThrow(TaskNotFoundException::new);
+        var task = taskRepository.findById(taskId).orElseThrow(() -> new TaskNotFoundException(taskId));
         if (!task.getUser().getId().toString().equals(this.getUserId()) && !this.getUserAuthorities().contains(UserAuthority.ADMIN))
-            throw new UnauthorizedUserException();
+            throw new UnauthorizedUserException(UUID.fromString(getUserId()));
         taskRepository.delete(task);
     }
 }

@@ -35,19 +35,19 @@ public class UserServiceImpl extends BaseServiceImpl implements UserService, Use
 
     @Override
     public UserModel findUserById(UUID userId) {
-        if (!userId.toString().equals(this.getUserId())) throw new UnauthorizedUserException();
+        if (!userId.toString().equals(this.getUserId())) throw new UnauthorizedUserException(userId);
         return new UserModel.Builder()
-                .fromEntity(userRepository.findById(userId).orElseThrow(UserNotFoundException::new))
+                .fromEntity(userRepository.findById(userId).orElseThrow(() -> new UserNotFoundException(userId)))
                 .build();
     }
 
     @Override
     public UserModel updateUser(UUID userId, UserModel user) {
         if (user == null) throw new IllegalArgumentException("User cannot be null");
-        if (!userId.toString().equals(this.getUserId())) throw new UnauthorizedUserException();
+        if (!userId.toString().equals(this.getUserId())) throw new UnauthorizedUserException(userId);
 
         var existingUser = userRepository.findById(userId)
-                .orElseThrow(UserNotFoundException::new);
+                .orElseThrow(() -> new UserNotFoundException(userId));
 
         if (!existingUser.getUsername().equals(user.getUsername())) {
             existingUser.setUsername(user.getUsername());
@@ -73,9 +73,9 @@ public class UserServiceImpl extends BaseServiceImpl implements UserService, Use
 
     @Override
     public void deleteUser(UUID userId) {
-        if (!userId.toString().equals(this.getUserId())) throw new UnauthorizedUserException();
+        if (!userId.toString().equals(this.getUserId())) throw new UnauthorizedUserException(userId);
         userRepository.delete(
-                userRepository.findById(userId).orElseThrow(UserNotFoundException::new)
+                userRepository.findById(userId).orElseThrow(() -> new UserNotFoundException(userId))
         );
     }
 

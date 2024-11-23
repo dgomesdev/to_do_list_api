@@ -131,7 +131,7 @@ class TaskServiceImplTest {
         exception = assertThrows(TaskNotFoundException.class, () -> taskService.findTaskById(null));
 
         //THEN
-        assertEquals("Task not found", exception.getMessage());
+        assertTrue(exception.getMessage().contains("not found"));
         verify(taskRepository, times(1)).findById(any());
     }
 
@@ -163,7 +163,7 @@ class TaskServiceImplTest {
         exception = assertThrows(TaskNotFoundException.class, () -> taskService.updateTask(null, mockTaskModel));
 
         //THEN
-        assertEquals("Task not found", exception.getMessage());
+        assertTrue(exception.getMessage().contains("not found"));
         verify(taskRepository, times(1)).findById(any());
     }
 
@@ -196,8 +196,8 @@ class TaskServiceImplTest {
         taskService.deleteTask(taskId);
 
         //THEN
-        assertDoesNotThrow(UnauthorizedUserException::new);
-        assertDoesNotThrow(TaskNotFoundException::new);
+        assertDoesNotThrow(() -> new UnauthorizedUserException(userId));
+        assertDoesNotThrow(() -> new TaskNotFoundException(taskId));
         verify(taskRepository, times(1)).delete(mockTaskEntity);
     }
 
@@ -211,7 +211,7 @@ class TaskServiceImplTest {
         exception = assertThrows(TaskNotFoundException.class, () -> taskService.deleteTask(taskId));
 
         //THEN
-        assertEquals("Task not found", exception.getMessage());
+        assertTrue(exception.getMessage().contains("not found"));
         verify(taskRepository, times(1)).findById(taskId);
         verify(taskRepository, times(0)).delete(any());
     }
@@ -229,7 +229,7 @@ class TaskServiceImplTest {
         exception = assertThrows(UnauthorizedUserException.class, () -> taskService.deleteTask(taskId));
 
         //THEN
-        assertEquals("Unauthorized user", exception.getMessage());
+        assertTrue(exception.getMessage().contains("Unauthorized access"));
         verify(taskRepository, times(1)).findById(taskId);
         verify(taskRepository, times(0)).delete(any());
     }

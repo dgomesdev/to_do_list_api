@@ -125,7 +125,7 @@ class UserServiceImplTest {
         exception = assertThrows(UnauthorizedUserException.class, () -> userService.findUserById(UUID.randomUUID()));
 
         //THEN
-        assertEquals("Unauthorized user", exception.getMessage());
+        assertTrue(exception.getMessage().contains("Unauthorized access"));
     }
 
     @Test
@@ -170,7 +170,7 @@ class UserServiceImplTest {
         exception = assertThrows(UnauthorizedUserException.class, () -> userService.updateUser(UUID.randomUUID(), mockUserModel));
 
         // THEN
-        assertEquals("Unauthorized user", exception.getMessage());
+        assertTrue(exception.getMessage().contains("Unauthorized access"));
     }
 
     @Test
@@ -183,8 +183,8 @@ class UserServiceImplTest {
         userService.deleteUser(userId);
 
         //THEN
-        assertDoesNotThrow(UnauthorizedUserException::new);
-        assertDoesNotThrow(UserNotFoundException::new);
+        assertDoesNotThrow(() -> new UnauthorizedUserException(userId));
+        assertDoesNotThrow(() -> new UserNotFoundException(userId));
     }
 
     @Test
@@ -197,7 +197,7 @@ class UserServiceImplTest {
         exception = assertThrows(UserNotFoundException.class, () -> userService.deleteUser(userId));
 
         //THEN
-        assertEquals("User not found", exception.getMessage());
+        assertTrue(exception.getMessage().contains("not found"));
     }
 
     @Test
@@ -210,7 +210,7 @@ class UserServiceImplTest {
         exception = assertThrows(UnauthorizedUserException.class, () -> userService.deleteUser(UUID.randomUUID()));
 
         //THEN
-        assertEquals("Unauthorized user", exception.getMessage());
+        assertTrue(exception.getMessage().contains("Unauthorized access"));
     }
 
     @Test
