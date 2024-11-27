@@ -30,6 +30,12 @@ dependencies {
 	testImplementation 'org.springframework.security:spring-security-test'
 }
 
+tasks.jar {
+	manifest {
+		attributes["Main-Class"] = "com.dgomesdev.to_do_list_api.ToDoListApiApplication"
+	}
+}
+
 tasks.named('test') {
 	useJUnitPlatform()
 }
