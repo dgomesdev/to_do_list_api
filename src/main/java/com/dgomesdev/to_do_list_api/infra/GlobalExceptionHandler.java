@@ -25,6 +25,8 @@ public class GlobalExceptionHandler {
                 || exception.getClass() == TaskNotFoundException.class
         ) httpStatus = HttpStatus.NOT_FOUND;
         else httpStatus = HttpStatus.INTERNAL_SERVER_ERROR;
-        return ResponseEntity.status(httpStatus).body(new MessageDto("An error occurred: " + exception.getMessage()));
+        return ResponseEntity.status(httpStatus).body(
+                new MessageDto("An error occurred: " + exception.getMessage() + ", Exception: "  + exception.getClass())
+        );
     }
 }
