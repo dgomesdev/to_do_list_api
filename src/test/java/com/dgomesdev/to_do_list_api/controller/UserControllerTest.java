@@ -19,7 +19,6 @@ import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
@@ -82,9 +81,9 @@ class UserControllerTest {
     void givenUser_whenUpdatingUser_thenReturnResponseOk() {
         //GIVEN
         when(mockUserRequestDto.username()).thenReturn("username");
-        when(mockUserRequestDto.password()).thenReturn("password");
-        when(passwordEncoder.encode("password")).thenReturn("encodedPassword");
-        when(userService.updateUser(eq(userId), any(UserModel.class))).thenReturn(mockUserModel);
+        when(mockUserRequestDto.password()).thenReturn("");
+        when(passwordEncoder.encode("")).thenReturn("");
+        when(userService.updateUser(any(UserModel.class))).thenReturn(mockUserModel);
 
         //WHEN
         ResponseEntity<?> response = userController.updateUser(userId, mockUserRequestDto);

@@ -11,8 +11,8 @@ import org.hibernate.annotations.UpdateTimestamp;
 import java.util.*;
 import java.util.stream.Collectors;
 
-@Entity(name = "tb_user")
 @Getter
+@Entity(name = "tb_user")
 public class UserEntity {
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)

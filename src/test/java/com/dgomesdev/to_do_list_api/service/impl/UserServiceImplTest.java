@@ -132,42 +132,44 @@ class UserServiceImplTest {
     @DisplayName("Should update user successfully")
     void givenValidUser_whenUpdatingUser_ThenReturnUpdatedUser() {
         //GIVEN
-        when(userRepository.findById(userId)).thenReturn(Optional.of(mockUserEntity));
-        when(userRepository.save(any(UserEntity.class))).thenReturn(mockUserEntity);
-        when(mockUserEntity.getUsername()).thenReturn("username");
-        when(mockUserEntity.getPassword()).thenReturn("password");
-        when(mockUserEntity.getUserAuthorities()).thenReturn(Set.of(UserAuthority.USER));
+        UserEntity oldUser = new UserEntity(
+                new UserModel.Builder()
+                        .withUserId(userId)
+                        .withUsername("oldUsername")
+                        .withPassword("password")
+                        .withUserAuthorities(Set.of(UserAuthority.USER))
+                        .build()
+        );
+        UserModel newUser = new UserModel.Builder()
+                .withUserId(userId)
+                .withUsername("newUsername")
+                .withPassword("")
+                .withUserAuthorities(Set.of(UserAuthority.ADMIN))
+                .build();
+        when(userRepository.findById(userId)).thenReturn(Optional.of(oldUser));
+        when(userRepository.save(any(UserEntity.class))).thenReturn(oldUser);
 
         //WHEN
-        UserModel response = userService.updateUser(userId, mockUserModel);
+        UserModel response = userService.updateUser(newUser);
 
         //THEN
-        assertEquals("username", response.getUsername());
+        assertEquals("newUsername", response.getUsername());
         assertEquals("password", response.getPassword());
-        assertEquals(mockUserModel.getTasks(), response.getTasks());
-    }
-
-    @Test
-    @DisplayName("Should throw an exception when trying to update an invalid user")
-    void givenInvalidUser_whenUpdatingUser_thenThrowException() {
-        // GIVEN
-        IllegalArgumentException exception;
-
-        //WHEN
-        exception = assertThrows(IllegalArgumentException.class, () -> userService.updateUser(userId, null));
-
-        // THEN
-        assertEquals("User cannot be null", exception.getMessage());
     }
 
     @Test
     @DisplayName("Should throw an exception when trying to update an user with invalid id")
     void givenUnauthorizedUser_whenUpdatingUser_thenThrowException() {
         // GIVEN
-        UnauthorizedUserException exception;
+        UserModel user = new UserModel.Builder()
+                .withUserId(UUID.randomUUID())
+                .withUsername("newUsername")
+                .withPassword("")
+                .withUserAuthorities(Set.of(UserAuthority.ADMIN))
+                .build();
 
         //WHEN
-        exception = assertThrows(UnauthorizedUserException.class, () -> userService.updateUser(UUID.randomUUID(), mockUserModel));
+        UnauthorizedUserException exception = assertThrows(UnauthorizedUserException.class, () -> userService.updateUser(user));
 
         // THEN
         assertTrue(exception.getMessage().contains("Unauthorized access"));

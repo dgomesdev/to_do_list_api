@@ -42,17 +42,17 @@ public class UserServiceImpl extends BaseServiceImpl implements UserService, Use
     }
 
     @Override
-    public UserModel updateUser(UUID userId, UserModel user) {
-        if (user == null) throw new IllegalArgumentException("User cannot be null");
-        if (!userId.toString().equals(this.getUserId())) throw new UnauthorizedUserException(userId);
+    public UserModel updateUser(UserModel user) {
+        if (!user.getUserId().toString().equals(this.getUserId()) && !this.getUserAuthorities().contains(UserAuthority.ADMIN))
+            throw new UnauthorizedUserException(user.getUserId());
 
-        var existingUser = userRepository.findById(userId)
-                .orElseThrow(() -> new UserNotFoundException(userId));
+        var existingUser = userRepository.findById(user.getUserId())
+                .orElseThrow(() -> new UserNotFoundException(user.getUserId()));
 
         if (!existingUser.getUsername().equals(user.getUsername())) {
             existingUser.setUsername(user.getUsername());
         }
-        if (user.getPassword() != null) {
+        if (!user.getPassword().isBlank()) {
             existingUser.setPassword(user.getPassword());
         }
         var userAuthorities = user.getAuthorities()

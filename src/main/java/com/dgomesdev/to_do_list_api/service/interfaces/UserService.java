@@ -8,6 +8,6 @@ public interface UserService {
 
     UserModel saveUser(UserModel newUser);
     UserModel findUserById(UUID userId);
-    UserModel updateUser(UUID userId, UserModel updatedUser);
+    UserModel updateUser(UserModel updatedUser);
     void deleteUser(UUID userId);
 }

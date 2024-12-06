@@ -41,7 +41,7 @@ public class UserController {
     public ResponseEntity<UserResponseDto> findUserById(@PathVariable UUID userId) {
         var user = userService.findUserById(userId);
         return ResponseEntity
-                .status(HttpStatus.OK)
+                .status(HttpStatus.FOUND)
                 .body(new UserResponseDto(user));
     }
 
@@ -60,8 +60,8 @@ public class UserController {
     ) {
         var encodedPassword = passwordEncoder.encode(user.password());
         var updatedUser = userService.updateUser(
-                userId,
                 new UserModel.Builder()
+                        .withUserId(userId)
                         .withUsername(user.username())
                         .withPassword(encodedPassword)
                         .withUserAuthorities(Set.of(UserAuthority.USER))

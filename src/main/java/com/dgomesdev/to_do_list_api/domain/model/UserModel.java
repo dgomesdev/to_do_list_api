@@ -10,10 +10,12 @@ import java.util.List;
 import java.util.Set;
 import java.util.UUID;
 
-@Getter
 public class UserModel extends User {
 
+    @Getter
     private final UUID userId;
+
+    @Getter
     private final List<TaskModel> tasks;
 
     private UserModel(Builder builder) {
@@ -56,7 +58,7 @@ public class UserModel extends User {
         }
 
         public Builder fromEntity(UserEntity userEntity) {
-            this.userId = userEntity.getId() != null ? userEntity.getId() : UUID.randomUUID();
+            this.userId = userEntity.getId();
             this.username = userEntity.getUsername();
             this.password = userEntity.getPassword();
             this.userAuthorities = userEntity.getUserAuthorities();
