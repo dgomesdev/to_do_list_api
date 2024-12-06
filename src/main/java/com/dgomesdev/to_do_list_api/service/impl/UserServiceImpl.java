@@ -8,6 +8,7 @@ import com.dgomesdev.to_do_list_api.domain.model.UserAuthority;
 import com.dgomesdev.to_do_list_api.domain.model.UserModel;
 import com.dgomesdev.to_do_list_api.service.interfaces.UserService;
 import jakarta.transaction.Transactional;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
@@ -28,6 +29,8 @@ public class UserServiceImpl extends BaseServiceImpl implements UserService, Use
 
     @Override
     public UserModel saveUser(UserModel newUser) {
+        if (userRepository.findUserByUsername(newUser.getUsername()).isPresent())
+            throw new DataIntegrityViolationException("User " + newUser.getUsername() + " already exists");
         return new UserModel.Builder()
                 .fromEntity(userRepository.save(new UserEntity(newUser)))
                 .build();

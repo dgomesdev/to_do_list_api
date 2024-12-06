@@ -10,12 +10,11 @@ import java.util.List;
 import java.util.Set;
 import java.util.UUID;
 
+@Getter
 public class UserModel extends User {
 
-    @Getter
     private final UUID userId;
 
-    @Getter
     private final List<TaskModel> tasks;
 
     private UserModel(Builder builder) {
