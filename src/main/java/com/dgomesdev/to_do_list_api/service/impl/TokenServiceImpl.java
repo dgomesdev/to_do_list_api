@@ -27,13 +27,14 @@ public class TokenServiceImpl implements TokenService {
 
     @Override
     public String generateToken(UserModel user) {
+        Instant expirationHour = (user.getPassword().isBlank()) ? setTemporaryExpirationHour() : setNormalExpirationHour();
             return JWT
                     .create()
                     .withIssuer("to_do_list_api")
                     .withClaim("userId", user.getUserId().toString())
                     .withClaim("username", user.getUsername())
                     .withClaim("userAuthorities", user.getAuthorities().stream().map(Object::toString).toList())
-                    .withExpiresAt(getTokenExpirationDate())
+                    .withExpiresAt(expirationHour)
                     .sign(buildAlgorithm(secret));
     }
 
@@ -64,7 +65,11 @@ public class TokenServiceImpl implements TokenService {
                 .verify(token);
     }
 
-    private Instant getTokenExpirationDate () {
+    private Instant setNormalExpirationHour () {
         return Instant.now().plus(2, ChronoUnit.HOURS);
+    }
+
+    private Instant setTemporaryExpirationHour () {
+        return Instant.now().plus(15, ChronoUnit.MINUTES);
     }
 }

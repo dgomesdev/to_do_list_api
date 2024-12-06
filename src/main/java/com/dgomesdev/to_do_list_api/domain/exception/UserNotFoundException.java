@@ -7,4 +7,8 @@ public class UserNotFoundException extends NoSuchElementException {
     public UserNotFoundException(UUID userId) {
         super("User with userId " + userId + " not found");
     }
+
+    public UserNotFoundException(String username) {
+        super("User with username " + username + " not found");
+    }
 }

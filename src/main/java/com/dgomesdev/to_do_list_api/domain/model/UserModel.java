@@ -14,8 +14,8 @@ import java.util.UUID;
 public class UserModel extends User {
 
     private final UUID userId;
-
     private final List<TaskModel> tasks;
+    private final String email;
 
     private UserModel(Builder builder) {
         super(
@@ -26,13 +26,15 @@ public class UserModel extends User {
                         .toList()
         );
         this.userId = builder.userId;
+        this.email = builder.email;
         this.tasks = builder.tasks != null ? List.copyOf(builder.tasks) : List.of();
     }
 
     public static class Builder {
         private UUID userId;
         private String username;
-        private String password = ""; // Default password (empty)
+        private String password = "";
+        private String email;
         private Set<UserAuthority> userAuthorities;
         private List<TaskModel> tasks = new ArrayList<>();
 
@@ -51,6 +53,11 @@ public class UserModel extends User {
             return this;
         }
 
+        public Builder withEmail(String email) {
+            this.email = email;
+            return this;
+        }
+
         public Builder withUserAuthorities(Set<UserAuthority> userAuthorities) {
             this.userAuthorities = userAuthorities;
             return this;
@@ -60,6 +67,7 @@ public class UserModel extends User {
             this.userId = userEntity.getId();
             this.username = userEntity.getUsername();
             this.password = userEntity.getPassword();
+            this.email = userEntity.getEmail();
             this.userAuthorities = userEntity.getUserAuthorities();
             this.tasks = userEntity
                     .getTasks()

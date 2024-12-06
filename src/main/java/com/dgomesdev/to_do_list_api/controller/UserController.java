@@ -14,7 +14,6 @@ import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.Set;
@@ -28,8 +27,7 @@ public class UserController {
 
     @Autowired
     private UserService userService;
-    @Autowired
-    private PasswordEncoder passwordEncoder;
+
 
     @GetMapping("/{userId}")
     @Operation(summary = "Find user by Id", description = "Find a specific user")
@@ -41,7 +39,7 @@ public class UserController {
     public ResponseEntity<UserResponseDto> findUserById(@PathVariable UUID userId) {
         var user = userService.findUserById(userId);
         return ResponseEntity
-                .status(HttpStatus.FOUND)
+                .status(HttpStatus.OK)
                 .body(new UserResponseDto(user));
     }
 
@@ -58,12 +56,11 @@ public class UserController {
             @PathVariable UUID userId,
             @RequestBody @Valid UserRequestDto user
     ) {
-        var encodedPassword = passwordEncoder.encode(user.password());
         var updatedUser = userService.updateUser(
                 new UserModel.Builder()
                         .withUserId(userId)
                         .withUsername(user.username())
-                        .withPassword(encodedPassword)
+                        .withPassword(user.password())
                         .withUserAuthorities(Set.of(UserAuthority.USER))
                         .build()
         );

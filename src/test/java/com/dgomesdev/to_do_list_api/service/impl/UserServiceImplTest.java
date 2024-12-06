@@ -20,6 +20,7 @@ import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.context.SecurityContext;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
+import org.springframework.security.crypto.password.PasswordEncoder;
 
 import java.util.Optional;
 import java.util.Set;
@@ -43,6 +44,9 @@ class UserServiceImplTest {
 
     @Mock
     private UserEntity mockUserEntity;
+
+    @Mock
+    private PasswordEncoder passwordEncoder;
 
     private final UUID userId = UUID.randomUUID();
 
@@ -70,6 +74,8 @@ class UserServiceImplTest {
     @DisplayName("Should save user successfully")
     void givenValidUser_whenSavingUser_ThenReturnSavedUser() {
         //GIVEN
+        when(mockUserModel.getPassword()).thenReturn("password");
+        when(passwordEncoder.encode("password")).thenReturn("encodedPassword");
         when(userRepository.save(any(UserEntity.class))).thenReturn(mockUserEntity);
         when(mockUserEntity.getUsername()).thenReturn("username");
         when(mockUserEntity.getPassword()).thenReturn("password");
@@ -88,13 +94,18 @@ class UserServiceImplTest {
     @DisplayName("Should throw an exception when trying to save an invalid user")
     void givenInvalidUser_whenSavingUser_thenThrowException() {
         // GIVEN
-        RuntimeException exception;
+        UserModel user = new UserModel.Builder()
+                        .withUserId(userId)
+                        .withUsername("username")
+                        .withPassword("")
+                        .withUserAuthorities(Set.of(UserAuthority.USER))
+                        .build();
 
         //WHEN
-        exception = assertThrows(RuntimeException.class, () -> userService.saveUser(null));
+        IllegalArgumentException exception = assertThrows(IllegalArgumentException.class, () -> userService.saveUser(user));
 
         // THEN
-        assertEquals("Cannot invoke \"com.dgomesdev.to_do_list_api.domain.model.UserModel.getUsername()\" because \"user\" is null", exception.getMessage());
+        assertEquals("Password can't be empty", exception.getMessage());
     }
 
     @Test
@@ -138,7 +149,9 @@ class UserServiceImplTest {
                         .withUsername("oldUsername")
                         .withPassword("password")
                         .withUserAuthorities(Set.of(UserAuthority.USER))
-                        .build()
+                        .build(),
+                "encodedPassword",
+                "encodedEmail"
         );
         UserModel newUser = new UserModel.Builder()
                 .withUserId(userId)
@@ -154,7 +167,7 @@ class UserServiceImplTest {
 
         //THEN
         assertEquals("newUsername", response.getUsername());
-        assertEquals("password", response.getPassword());
+        assertEquals("encodedPassword", response.getPassword());
     }
 
     @Test

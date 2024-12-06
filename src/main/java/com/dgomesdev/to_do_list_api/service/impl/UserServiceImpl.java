@@ -12,8 +12,10 @@ import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
+import java.util.Objects;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
@@ -22,25 +24,47 @@ import java.util.stream.Collectors;
 public class UserServiceImpl extends BaseServiceImpl implements UserService, UserDetailsService {
 
     private final UserRepository userRepository;
+    private final PasswordEncoder passwordEncoder;
 
-    public UserServiceImpl(UserRepository userRepository) {
+    public UserServiceImpl(UserRepository userRepository, PasswordEncoder passwordEncoder) {
         this.userRepository = userRepository;
+        this.passwordEncoder = passwordEncoder;
     }
 
     @Override
     public UserModel saveUser(UserModel newUser) {
         if (userRepository.findUserByUsername(newUser.getUsername()).isPresent())
             throw new DataIntegrityViolationException("User " + newUser.getUsername() + " already exists");
+
+        if (newUser.getPassword().isBlank())
+            throw new IllegalArgumentException("Password can't be empty");
+
+        String encodedPassword = passwordEncoder.encode(newUser.getPassword());
+        String encodedEmail = passwordEncoder.encode(newUser.getEmail());
+
         return new UserModel.Builder()
-                .fromEntity(userRepository.save(new UserEntity(newUser)))
+                .fromEntity(userRepository.save(new UserEntity(newUser, encodedPassword, encodedEmail)))
                 .build();
     }
 
     @Override
     public UserModel findUserById(UUID userId) {
         if (!userId.toString().equals(this.getUserId())) throw new UnauthorizedUserException(userId);
+
         return new UserModel.Builder()
                 .fromEntity(userRepository.findById(userId).orElseThrow(() -> new UserNotFoundException(userId)))
+                .build();
+    }
+
+    @Override
+    public UserModel findUserByUsername(UserModel userToRecoverPassword) {
+        var foundUser = userRepository.findUserByUsername(userToRecoverPassword.getUsername())
+                .orElseThrow(() -> new UserNotFoundException(userToRecoverPassword.getUsername()));
+        var encodedEmail = passwordEncoder.encode(userToRecoverPassword.getEmail());
+        if (!Objects.equals(foundUser.getEmail(), encodedEmail)) throw new UnauthorizedUserException(userToRecoverPassword.getUsername());
+        return new UserModel.Builder()
+                .fromEntity(foundUser)
+                .withPassword("")
                 .build();
     }
 
@@ -55,13 +79,16 @@ public class UserServiceImpl extends BaseServiceImpl implements UserService, Use
         if (!existingUser.getUsername().equals(user.getUsername())) {
             existingUser.setUsername(user.getUsername());
         }
+
         if (!user.getPassword().isBlank()) {
-            existingUser.setPassword(user.getPassword());
+            existingUser.setPassword(passwordEncoder.encode(user.getPassword()));
         }
+
         var userAuthorities = user.getAuthorities()
                 .stream()
                 .map(userAuthority -> UserAuthority.valueOf(userAuthority.getAuthority()))
                 .collect(Collectors.toSet());
+
         if (!existingUser.getUserAuthorities().equals(userAuthorities)) {
             existingUser.setUserAuthorities(userAuthorities);
         }
@@ -77,6 +104,7 @@ public class UserServiceImpl extends BaseServiceImpl implements UserService, Use
     @Override
     public void deleteUser(UUID userId) {
         if (!userId.toString().equals(this.getUserId())) throw new UnauthorizedUserException(userId);
+
         userRepository.delete(
                 userRepository.findById(userId).orElseThrow(() -> new UserNotFoundException(userId))
         );
@@ -86,6 +114,7 @@ public class UserServiceImpl extends BaseServiceImpl implements UserService, Use
     public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
         var user = userRepository.findUserByUsername(username)
                 .orElseThrow(() -> new UsernameNotFoundException("User not found with username: " + username));
+
         return new UserModel.Builder()
                 .fromEntity(user)
                 .build();

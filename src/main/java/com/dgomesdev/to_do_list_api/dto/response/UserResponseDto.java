@@ -8,7 +8,6 @@ import java.util.UUID;
 public record UserResponseDto(
         UUID userId,
         String username,
-        String password,
         List<TaskResponseDto> tasks
 ) {
 
@@ -16,7 +15,6 @@ public record UserResponseDto(
         this(
                 user.getUserId(),
                 user.getUsername(),
-                user.getPassword(),
                 user.getTasks().stream().map(TaskResponseDto::new).toList()
         );
     }

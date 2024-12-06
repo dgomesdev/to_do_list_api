@@ -13,7 +13,6 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.crypto.password.PasswordEncoder;
 
 import java.util.UUID;
 
@@ -29,9 +28,6 @@ class UserControllerTest {
 
     @Mock
     private UserService userService;
-
-    @Mock
-    private PasswordEncoder passwordEncoder;
 
     @Mock
     private UserRequestDto mockUserRequestDto;
@@ -59,7 +55,6 @@ class UserControllerTest {
         assertNotNull(responseBody);
         assertEquals(mockUserResponseDto.userId(), responseBody.userId());
         assertEquals(mockUserResponseDto.username(), responseBody.username());
-        assertEquals(mockUserResponseDto.password(), responseBody.password());
         assertEquals(mockUserResponseDto.tasks(), responseBody.tasks());
     }
 
@@ -82,7 +77,6 @@ class UserControllerTest {
         //GIVEN
         when(mockUserRequestDto.username()).thenReturn("username");
         when(mockUserRequestDto.password()).thenReturn("");
-        when(passwordEncoder.encode("")).thenReturn("");
         when(userService.updateUser(any(UserModel.class))).thenReturn(mockUserModel);
 
         //WHEN
@@ -94,7 +88,6 @@ class UserControllerTest {
         assertNotNull(responseBody);
         assertEquals(mockUserResponseDto.userId(), responseBody.userId());
         assertEquals(mockUserResponseDto.username(), responseBody.username());
-        assertEquals(mockUserResponseDto.password(), responseBody.password());
         assertEquals(mockUserResponseDto.tasks(), responseBody.tasks());
     }
 

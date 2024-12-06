@@ -18,7 +18,6 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
-import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.Set;
@@ -35,8 +34,6 @@ public class AuthController {
     private TokenService tokenService;
     @Autowired
     private AuthenticationManager authenticationManager;
-    @Autowired
-    private PasswordEncoder passwordEncoder;
 
     @PostMapping("register")
     @Operation(summary = "Register an user", description = "Create the user")
@@ -46,35 +43,50 @@ public class AuthController {
             @ApiResponse(responseCode = "500", description = "Error while creating user")
     })
     public ResponseEntity<AuthResponseDto> register(@RequestBody @Valid UserRequestDto user) {
-            String encodedPassword = passwordEncoder.encode(user.password());
-            UserModel savedUser = userService.saveUser(new UserModel.Builder()
-                    .withUsername(user.username())
-                    .withPassword(encodedPassword)
-                    .withUserAuthorities(Set.of(UserAuthority.USER))
-                    .build()
-            );
-            String token = tokenService.generateToken(savedUser);
-            System.out.println(token);
-            return ResponseEntity
-                    .status(HttpStatus.CREATED)
-                    .body(new AuthResponseDto(new UserResponseDto(savedUser), token));
+        UserModel savedUser = userService.saveUser(new UserModel.Builder()
+                .withUsername(user.username())
+                .withPassword(user.password())
+                .withEmail(user.email())
+                .withUserAuthorities(Set.of(UserAuthority.USER))
+                .build()
+        );
+        String token = tokenService.generateToken(savedUser);
+        return ResponseEntity
+                .status(HttpStatus.CREATED)
+                .body(new AuthResponseDto(new UserResponseDto(savedUser), token));
     }
 
     @PostMapping("login")
     @Operation(summary = "Login", description = "User login")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "Login successful for user"),
-            @ApiResponse(responseCode = "401", description = "User not found"),
+            @ApiResponse(responseCode = "404", description = "User not found"),
             @ApiResponse(responseCode = "500", description = "Error while logging in")
     })
     public ResponseEntity<AuthResponseDto> login(@RequestBody @Valid UserRequestDto user) {
-            Authentication authentication = authenticationManager.authenticate(
-                    new UsernamePasswordAuthenticationToken(user.username(), user.password())
-            );
-            var loggedUser = (UserModel) authentication.getPrincipal();
-            var token = tokenService.generateToken(loggedUser);
-            return ResponseEntity
-                    .status(HttpStatus.OK)
-                    .body(new AuthResponseDto(new UserResponseDto(loggedUser), token));
+        Authentication authentication = authenticationManager.authenticate(
+                new UsernamePasswordAuthenticationToken(user.username(), user.password())
+        );
+        var loggedUser = (UserModel) authentication.getPrincipal();
+        var token = tokenService.generateToken(loggedUser);
+        return ResponseEntity
+                .status(HttpStatus.OK)
+                .body(new AuthResponseDto(new UserResponseDto(loggedUser), token));
+    }
+
+    @PostMapping("recoverPassword")
+    @Operation(summary = "recoverPassword", description = "Recover Password")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Temporary token to reset password"),
+            @ApiResponse(responseCode = "404", description = "User not found"),
+            @ApiResponse(responseCode = "500", description = "Error while recovering password")
+    })
+    public ResponseEntity<AuthResponseDto> recoverPassword(@RequestBody @Valid UserRequestDto user) {
+        var userToRecoverPassword = new UserModel.Builder().withUsername(user.username()).withEmail(user.email()).build();
+        var foundUser = userService.findUserByUsername(userToRecoverPassword);
+        var token = tokenService.generateToken(foundUser);
+        return ResponseEntity
+                .status(HttpStatus.OK)
+                .body(new AuthResponseDto(new UserResponseDto(foundUser), token));
     }
 }

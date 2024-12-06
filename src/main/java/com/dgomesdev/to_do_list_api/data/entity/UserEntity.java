@@ -27,6 +27,10 @@ public class UserEntity {
     private String password;
 
     @Setter
+    @Column(unique = true, nullable = false)
+    private String email;
+
+    @Setter
     @ElementCollection(targetClass = UserAuthority.class, fetch = FetchType.EAGER)
     @Enumerated(EnumType.STRING)
     @CollectionTable(name = "user_authorities", joinColumns = @JoinColumn(name = "user_id"))
@@ -44,9 +48,10 @@ public class UserEntity {
     @Column(name = "updated_at")
     private Date updatedAt;
 
-    public UserEntity(UserModel user) {
+    public UserEntity(UserModel user, String encodedPassword, String encodedEmail) {
         this.username = user.getUsername();
-        this.password = user.getPassword();
+        this.password = encodedPassword;
+        this.email = encodedEmail;
         this.userAuthorities = user.getAuthorities()
                 .stream()
                 .map(userAuthority -> UserAuthority.valueOf(userAuthority.getAuthority()))
