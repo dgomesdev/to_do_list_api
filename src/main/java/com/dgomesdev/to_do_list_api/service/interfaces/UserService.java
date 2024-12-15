@@ -8,7 +8,7 @@ public interface UserService {
 
     UserModel saveUser(UserModel newUser);
     UserModel findUserById(UUID userId);
-    UserModel findUserByUsername(UserModel userToRecoverPassword);
+    UserModel findUserByEmail(String email);
     UserModel updateUser(UserModel updatedUser);
     void deleteUser(UUID userId);
 }

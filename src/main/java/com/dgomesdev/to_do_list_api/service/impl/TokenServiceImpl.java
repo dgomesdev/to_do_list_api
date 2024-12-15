@@ -32,7 +32,6 @@ public class TokenServiceImpl implements TokenService {
                     .create()
                     .withIssuer("to_do_list_api")
                     .withClaim("userId", user.getUserId().toString())
-                    .withClaim("username", user.getUsername())
                     .withClaim("userAuthorities", user.getAuthorities().stream().map(Object::toString).toList())
                     .withExpiresAt(expirationHour)
                     .sign(buildAlgorithm(secret));
@@ -43,7 +42,6 @@ public class TokenServiceImpl implements TokenService {
             var decodedToken = validateToken(token);
 
             UUID userId = UUID.fromString(decodedToken.getClaim("userId").asString());
-            String username = decodedToken.getClaim("username").asString();
             var authoritiesList = decodedToken.getClaim("userAuthorities").asList(String.class);
             Set<UserAuthority> userAuthorities = authoritiesList.stream()
                     .map(UserAuthority::valueOf)
@@ -51,7 +49,6 @@ public class TokenServiceImpl implements TokenService {
 
             return new UserModel.Builder()
                     .withUserId(userId)
-                    .withUsername(username)
                     .withUserAuthorities(userAuthorities)
                     .build();
     }

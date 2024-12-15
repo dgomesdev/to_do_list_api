@@ -2,10 +2,10 @@ package com.dgomesdev.to_do_list_api.domain.model;
 
 import com.dgomesdev.to_do_list_api.data.entity.UserEntity;
 import lombok.Getter;
-import org.springframework.security.core.authority.SimpleGrantedAuthority;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.userdetails.User;
+import org.springframework.security.crypto.password.PasswordEncoder;
 
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
 import java.util.UUID;
@@ -22,21 +22,25 @@ public class UserModel extends User {
                 builder.username,
                 builder.password,
                 builder.userAuthorities.stream()
-                        .map(authority -> new SimpleGrantedAuthority(authority.name()))
+                        .map(UserAuthority::toGrantedAuthority)
                         .toList()
         );
         this.userId = builder.userId;
         this.email = builder.email;
-        this.tasks = builder.tasks != null ? List.copyOf(builder.tasks) : List.of();
+        this.tasks = builder.tasks;
     }
 
     public static class Builder {
+
+        @Autowired
+        private PasswordEncoder passwordEncoder;
+
         private UUID userId;
         private String username;
         private String password = "";
         private String email;
         private Set<UserAuthority> userAuthorities;
-        private List<TaskModel> tasks = new ArrayList<>();
+        private List<TaskModel> tasks = List.of();
 
         public Builder withUserId(UUID userId) {
             this.userId = userId;
@@ -49,12 +53,12 @@ public class UserModel extends User {
         }
 
         public Builder withPassword(String password) {
-            this.password = password;
+            this.password = passwordEncoder.encode(password);
             return this;
         }
 
         public Builder withEmail(String email) {
-            this.email = email;
+            this.email = passwordEncoder.encode(email);
             return this;
         }
 
@@ -66,8 +70,6 @@ public class UserModel extends User {
         public Builder fromEntity(UserEntity userEntity) {
             this.userId = userEntity.getId();
             this.username = userEntity.getUsername();
-            this.password = userEntity.getPassword();
-            this.email = userEntity.getEmail();
             this.userAuthorities = userEntity.getUserAuthorities();
             this.tasks = userEntity
                     .getTasks()

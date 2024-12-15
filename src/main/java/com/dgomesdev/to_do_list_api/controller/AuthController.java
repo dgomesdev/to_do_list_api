@@ -82,8 +82,7 @@ public class AuthController {
             @ApiResponse(responseCode = "500", description = "Error while recovering password")
     })
     public ResponseEntity<AuthResponseDto> recoverPassword(@RequestBody @Valid UserRequestDto user) {
-        var userToRecoverPassword = new UserModel.Builder().withUsername(user.username()).withEmail(user.email()).build();
-        var foundUser = userService.findUserByUsername(userToRecoverPassword);
+        var foundUser = userService.findUserByEmail(user.email());
         var token = tokenService.generateToken(foundUser);
         return ResponseEntity
                 .status(HttpStatus.OK)

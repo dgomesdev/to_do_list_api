@@ -12,10 +12,8 @@ import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
-import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
-import java.util.Objects;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
@@ -24,26 +22,21 @@ import java.util.stream.Collectors;
 public class UserServiceImpl extends BaseServiceImpl implements UserService, UserDetailsService {
 
     private final UserRepository userRepository;
-    private final PasswordEncoder passwordEncoder;
 
-    public UserServiceImpl(UserRepository userRepository, PasswordEncoder passwordEncoder) {
+    public UserServiceImpl(UserRepository userRepository) {
         this.userRepository = userRepository;
-        this.passwordEncoder = passwordEncoder;
     }
 
     @Override
     public UserModel saveUser(UserModel newUser) {
-        if (userRepository.findUserByUsername(newUser.getUsername()).isPresent())
-            throw new DataIntegrityViolationException("User " + newUser.getUsername() + " already exists");
+        if (userRepository.findUserByEmail(newUser.getEmail()).isPresent())
+            throw new DataIntegrityViolationException("User " + newUser.getEmail() + " already exists");
 
         if (newUser.getPassword().isBlank())
             throw new IllegalArgumentException("Password can't be empty");
 
-        String encodedPassword = passwordEncoder.encode(newUser.getPassword());
-        String encodedEmail = passwordEncoder.encode(newUser.getEmail());
-
         return new UserModel.Builder()
-                .fromEntity(userRepository.save(new UserEntity(newUser, encodedPassword, encodedEmail)))
+                .fromEntity(userRepository.save(new UserEntity(newUser)))
                 .build();
     }
 
@@ -57,14 +50,11 @@ public class UserServiceImpl extends BaseServiceImpl implements UserService, Use
     }
 
     @Override
-    public UserModel findUserByUsername(UserModel userToRecoverPassword) {
-        var foundUser = userRepository.findUserByUsername(userToRecoverPassword.getUsername())
-                .orElseThrow(() -> new UserNotFoundException(userToRecoverPassword.getUsername()));
-        var encodedEmail = passwordEncoder.encode(userToRecoverPassword.getEmail());
-        if (!Objects.equals(foundUser.getEmail(), encodedEmail)) throw new UnauthorizedUserException(userToRecoverPassword.getUsername());
+    public UserModel findUserByEmail(String email) {
+        var foundUser = userRepository.findUserByEmail(email)
+                .orElseThrow(() -> new UserNotFoundException(email));
         return new UserModel.Builder()
                 .fromEntity(foundUser)
-                .withPassword("")
                 .build();
     }
 
@@ -80,8 +70,12 @@ public class UserServiceImpl extends BaseServiceImpl implements UserService, Use
             existingUser.setUsername(user.getUsername());
         }
 
+        if (!existingUser.getEmail().equals(user.getEmail())) {
+            existingUser.setEmail(user.getEmail());
+        }
+
         if (!user.getPassword().isBlank()) {
-            existingUser.setPassword(passwordEncoder.encode(user.getPassword()));
+            existingUser.setPassword(user.getPassword());
         }
 
         var userAuthorities = user.getAuthorities()
@@ -111,9 +105,9 @@ public class UserServiceImpl extends BaseServiceImpl implements UserService, Use
     }
 
     @Override
-    public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
-        var user = userRepository.findUserByUsername(username)
-                .orElseThrow(() -> new UsernameNotFoundException("User not found with username: " + username));
+    public UserDetails loadUserByUsername(String email) throws UsernameNotFoundException {
+        var user = userRepository.findUserByEmail(email)
+                .orElseThrow(() -> new UsernameNotFoundException("User not found with email: " + email));
 
         return new UserModel.Builder()
                 .fromEntity(user)

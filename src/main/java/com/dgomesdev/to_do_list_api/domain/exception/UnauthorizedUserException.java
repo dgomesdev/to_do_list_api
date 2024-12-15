@@ -7,8 +7,4 @@ public class UnauthorizedUserException extends RuntimeException {
     public UnauthorizedUserException(UUID userId) {
         super("Unauthorized access for user with id " + userId);
     }
-
-    public UnauthorizedUserException(String username) {
-        super("Unauthorized access for user with username " + username);
-    }
 }

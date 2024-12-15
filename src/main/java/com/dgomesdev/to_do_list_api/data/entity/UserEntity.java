@@ -19,7 +19,7 @@ public class UserEntity {
     private UUID id;
 
     @Setter
-    @Column(unique = true, nullable = false)
+    @Column(nullable = false)
     private String username;
 
     @Setter
@@ -48,13 +48,13 @@ public class UserEntity {
     @Column(name = "updated_at")
     private Date updatedAt;
 
-    public UserEntity(UserModel user, String encodedPassword, String encodedEmail) {
+    public UserEntity(UserModel user) {
         this.username = user.getUsername();
-        this.password = encodedPassword;
-        this.email = encodedEmail;
+        this.password = user.getPassword();
+        this.email = user.getEmail();
         this.userAuthorities = user.getAuthorities()
                 .stream()
-                .map(userAuthority -> UserAuthority.valueOf(userAuthority.getAuthority()))
+                .map(UserAuthority::fromGrantedAuthority)
                 .collect(Collectors.toSet());
     }
 

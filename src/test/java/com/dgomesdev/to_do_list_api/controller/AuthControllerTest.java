@@ -106,10 +106,10 @@ public class AuthControllerTest {
     @DisplayName("Should throw an exception when trying to log in an invalid user")
     public void givenInvalidUser_whenLoggingInUser_throwException() {
         //GIVEN
-        var invalidUser = new UserRequestDto("", "");
+        NullPointerException exception;
 
         //WHEN
-        NullPointerException exception = assertThrows(NullPointerException.class, () -> authController.login(invalidUser));
+        exception = assertThrows(NullPointerException.class, () -> authController.login(mockUserRequestDto));
 
         //THEN
         assertEquals("Cannot invoke \"org.springframework.security.core.Authentication.getPrincipal()\" because \"authentication\" is null", exception.getMessage());
