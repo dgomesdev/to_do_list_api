@@ -65,7 +65,7 @@ public class AuthController {
     })
     public ResponseEntity<AuthResponseDto> login(@RequestBody @Valid UserRequestDto user) {
         Authentication authentication = authenticationManager.authenticate(
-                new UsernamePasswordAuthenticationToken(user.username(), user.password())
+                new UsernamePasswordAuthenticationToken(user.email(), user.password())
         );
         var loggedUser = (UserModel) authentication.getPrincipal();
         var token = tokenService.generateToken(loggedUser);

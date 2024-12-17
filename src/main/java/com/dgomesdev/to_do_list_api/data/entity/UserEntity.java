@@ -1,12 +1,12 @@
 package com.dgomesdev.to_do_list_api.data.entity;
 
 import com.dgomesdev.to_do_list_api.domain.model.UserAuthority;
-import com.dgomesdev.to_do_list_api.domain.model.UserModel;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
+import org.springframework.security.core.GrantedAuthority;
 
 import java.util.*;
 import java.util.stream.Collectors;
@@ -48,11 +48,11 @@ public class UserEntity {
     @Column(name = "updated_at")
     private Date updatedAt;
 
-    public UserEntity(UserModel user) {
-        this.username = user.getUsername();
-        this.password = user.getPassword();
-        this.email = user.getEmail();
-        this.userAuthorities = user.getAuthorities()
+    public UserEntity(String username, String password, String email, Collection<GrantedAuthority> authorities) {
+        this.username = username;
+        this.password = password;
+        this.email = email;
+        this.userAuthorities = authorities
                 .stream()
                 .map(UserAuthority::fromGrantedAuthority)
                 .collect(Collectors.toSet());

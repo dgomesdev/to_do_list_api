@@ -2,9 +2,7 @@ package com.dgomesdev.to_do_list_api.domain.model;
 
 import com.dgomesdev.to_do_list_api.data.entity.UserEntity;
 import lombok.Getter;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.userdetails.User;
-import org.springframework.security.crypto.password.PasswordEncoder;
 
 import java.util.List;
 import java.util.Set;
@@ -32,13 +30,10 @@ public class UserModel extends User {
 
     public static class Builder {
 
-        @Autowired
-        private PasswordEncoder passwordEncoder;
-
         private UUID userId;
         private String username;
         private String password = "";
-        private String email;
+        private String email = "";
         private Set<UserAuthority> userAuthorities;
         private List<TaskModel> tasks = List.of();
 
@@ -53,12 +48,12 @@ public class UserModel extends User {
         }
 
         public Builder withPassword(String password) {
-            this.password = passwordEncoder.encode(password);
+            this.password = password;
             return this;
         }
 
         public Builder withEmail(String email) {
-            this.email = passwordEncoder.encode(email);
+            this.email = email;
             return this;
         }
 

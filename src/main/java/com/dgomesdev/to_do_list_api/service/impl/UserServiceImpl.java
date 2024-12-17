@@ -12,6 +12,7 @@ import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import java.util.UUID;
@@ -22,13 +23,18 @@ import java.util.stream.Collectors;
 public class UserServiceImpl extends BaseServiceImpl implements UserService, UserDetailsService {
 
     private final UserRepository userRepository;
+    private final PasswordEncoder passwordEncoder;
 
-    public UserServiceImpl(UserRepository userRepository) {
+    public UserServiceImpl(UserRepository userRepository, PasswordEncoder passwordEncoder) {
         this.userRepository = userRepository;
+        this.passwordEncoder = passwordEncoder;
     }
 
     @Override
     public UserModel saveUser(UserModel newUser) {
+        if (newUser.getEmail().isBlank())
+            throw new IllegalArgumentException("E-mail can't be empty");
+
         if (userRepository.findUserByEmail(newUser.getEmail()).isPresent())
             throw new DataIntegrityViolationException("User " + newUser.getEmail() + " already exists");
 
@@ -36,7 +42,14 @@ public class UserServiceImpl extends BaseServiceImpl implements UserService, Use
             throw new IllegalArgumentException("Password can't be empty");
 
         return new UserModel.Builder()
-                .fromEntity(userRepository.save(new UserEntity(newUser)))
+                .fromEntity(userRepository.save(
+                        new UserEntity(
+                                newUser.getUsername(),
+                                passwordEncoder.encode(newUser.getPassword()),
+                                passwordEncoder.encode(newUser.getEmail()),
+                                newUser.getAuthorities()
+                        )
+                ))
                 .build();
     }
 
@@ -70,12 +83,12 @@ public class UserServiceImpl extends BaseServiceImpl implements UserService, Use
             existingUser.setUsername(user.getUsername());
         }
 
-        if (!existingUser.getEmail().equals(user.getEmail())) {
-            existingUser.setEmail(user.getEmail());
+        if (!user.getEmail().isBlank() && !passwordEncoder.matches(user.getEmail(), existingUser.getEmail())) {
+            existingUser.setEmail(passwordEncoder.encode(user.getEmail()));
         }
 
-        if (!user.getPassword().isBlank()) {
-            existingUser.setPassword(user.getPassword());
+        if (!user.getPassword().isBlank() && !passwordEncoder.matches(user.getPassword(), existingUser.getPassword())) {
+            existingUser.setPassword(passwordEncoder.encode(user.getPassword()));
         }
 
         var userAuthorities = user.getAuthorities()
