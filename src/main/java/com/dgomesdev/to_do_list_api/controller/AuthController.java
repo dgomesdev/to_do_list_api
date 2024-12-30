@@ -4,14 +4,13 @@ import com.dgomesdev.to_do_list_api.domain.model.UserAuthority;
 import com.dgomesdev.to_do_list_api.domain.model.UserModel;
 import com.dgomesdev.to_do_list_api.dto.request.UserRequestDto;
 import com.dgomesdev.to_do_list_api.dto.response.AuthResponseDto;
+import com.dgomesdev.to_do_list_api.dto.response.MessageDto;
 import com.dgomesdev.to_do_list_api.dto.response.UserResponseDto;
+import com.dgomesdev.to_do_list_api.service.interfaces.RecoverPasswordService;
 import com.dgomesdev.to_do_list_api.service.interfaces.TokenService;
 import com.dgomesdev.to_do_list_api.service.interfaces.UserService;
 import io.swagger.v3.oas.annotations.Operation;
-import io.swagger.v3.oas.annotations.responses.ApiResponse;
-import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
-import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -33,16 +32,13 @@ public class AuthController {
     @Autowired
     private TokenService tokenService;
     @Autowired
+    private RecoverPasswordService recoverPasswordService;
+    @Autowired
     private AuthenticationManager authenticationManager;
 
     @PostMapping("register")
-    @Operation(summary = "Register an user", description = "Create the user")
-    @ApiResponses(value = {
-            @ApiResponse(responseCode = "201", description = "User created"),
-            @ApiResponse(responseCode = "400", description = "Invalid user"),
-            @ApiResponse(responseCode = "500", description = "Error while creating user")
-    })
-    public ResponseEntity<AuthResponseDto> register(@RequestBody @Valid UserRequestDto user) {
+    @Operation(summary = "Register", description = "Create user")
+    public ResponseEntity<AuthResponseDto> register(@RequestBody UserRequestDto user) {
         UserModel savedUser = userService.saveUser(new UserModel.Builder()
                 .withUsername(user.username())
                 .withPassword(user.password())
@@ -51,6 +47,11 @@ public class AuthController {
                 .build()
         );
         String token = tokenService.generateToken(savedUser);
+        recoverPasswordService.sendMail(
+                user.email(),
+                "User registered successfully",
+                "You have registered successfully!"
+        );
         return ResponseEntity
                 .status(HttpStatus.CREATED)
                 .body(new AuthResponseDto(new UserResponseDto(savedUser), token));
@@ -58,12 +59,7 @@ public class AuthController {
 
     @PostMapping("login")
     @Operation(summary = "Login", description = "User login")
-    @ApiResponses(value = {
-            @ApiResponse(responseCode = "200", description = "Login successful for user"),
-            @ApiResponse(responseCode = "404", description = "User not found"),
-            @ApiResponse(responseCode = "500", description = "Error while logging in")
-    })
-    public ResponseEntity<AuthResponseDto> login(@RequestBody @Valid UserRequestDto user) {
+    public ResponseEntity<AuthResponseDto> login(@RequestBody UserRequestDto user) {
         Authentication authentication = authenticationManager.authenticate(
                 new UsernamePasswordAuthenticationToken(user.email(), user.password())
         );
@@ -76,16 +72,23 @@ public class AuthController {
 
     @PostMapping("recoverPassword")
     @Operation(summary = "recoverPassword", description = "Recover Password")
-    @ApiResponses(value = {
-            @ApiResponse(responseCode = "200", description = "Temporary token to reset password"),
-            @ApiResponse(responseCode = "404", description = "User not found"),
-            @ApiResponse(responseCode = "500", description = "Error while recovering password")
-    })
-    public ResponseEntity<AuthResponseDto> recoverPassword(@RequestBody @Valid UserRequestDto user) {
+    public ResponseEntity<MessageDto> recoverPassword(@RequestBody UserRequestDto user) {
         var foundUser = userService.findUserByEmail(user.email());
-        var token = tokenService.generateToken(foundUser);
+        var recoveryPasswordCode = recoverPasswordService.generateCode(foundUser.getUserId());
+        recoverPasswordService.sendMail(user.email(), "Recover password", "Your recovery code is: " + recoveryPasswordCode);
         return ResponseEntity
                 .status(HttpStatus.OK)
-                .body(new AuthResponseDto(new UserResponseDto(foundUser), token));
+                .body(new MessageDto("Recovery code sent by mail"));
+    }
+
+    @PostMapping("resetPassword/{recoveryCode}")
+    @Operation(summary = "Reset password", description = "Reset password")
+    public ResponseEntity<MessageDto> resetPassword(@PathVariable String recoveryCode, @RequestBody UserRequestDto user) {
+        var foundUser = userService.findUserByEmail(user.email());
+        recoverPasswordService.validateCode(foundUser.getUserId(), recoveryCode);
+        userService.resetPassword(foundUser.getUserId(), user.password());
+        return ResponseEntity
+                .status(HttpStatus.OK)
+                .body(new MessageDto("Password updated successfully"));
     }
 }

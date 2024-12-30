@@ -18,7 +18,7 @@ import java.util.stream.Collectors;
 @Service
 public class TokenServiceImpl implements TokenService {
 
-    @Value("${api:security:token:secret}")
+    @Value("${api.security.token.secret}")
     private String secret;
 
     private Algorithm buildAlgorithm(String secret) {
@@ -54,7 +54,6 @@ public class TokenServiceImpl implements TokenService {
     }
 
     private DecodedJWT validateToken(String token) {
-
         return JWT
                 .require(buildAlgorithm(secret))
                 .withIssuer("to_do_list_api")

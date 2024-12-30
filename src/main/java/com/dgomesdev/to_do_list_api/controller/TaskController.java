@@ -6,8 +6,6 @@ import com.dgomesdev.to_do_list_api.dto.response.MessageDto;
 import com.dgomesdev.to_do_list_api.dto.response.TaskResponseDto;
 import com.dgomesdev.to_do_list_api.service.interfaces.TaskService;
 import io.swagger.v3.oas.annotations.Operation;
-import io.swagger.v3.oas.annotations.responses.ApiResponse;
-import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -27,11 +25,7 @@ public class TaskController {
     private TaskService taskService;
 
     @PostMapping
-    @Operation(summary = "Save task", description = "Create a task")
-    @ApiResponses(value = {
-            @ApiResponse(responseCode = "201", description = "Task saved"),
-            @ApiResponse(responseCode = "500", description = "Error while saving the task"),
-    })
+    @Operation(summary = "Save task", description = "Create task")
     public ResponseEntity<TaskResponseDto> saveTask(@RequestBody @Valid TaskRequestDto taskRequestDto) {
             var newTask = taskService.saveTask(new TaskModel.Builder().fromRequest(taskRequestDto).build());
             return ResponseEntity
@@ -40,13 +34,7 @@ public class TaskController {
     }
 
     @GetMapping("/{taskId}")
-    @Operation(summary = "Find task by Id", description = "Find a specific task")
-    @ApiResponses(value = {
-            @ApiResponse(responseCode = "200", description = "Task found"),
-            @ApiResponse(responseCode = "401", description = "Unauthorized user"),
-            @ApiResponse(responseCode = "404", description = "Task not found"),
-            @ApiResponse(responseCode = "500", description = "Error while saving the task")
-    })
+    @Operation(summary = "Find task", description = "Find a specific task by ID")
     public ResponseEntity<TaskResponseDto> findTaskById(@PathVariable UUID taskId) {
             var foundTask = taskService.findTaskById(taskId);
             return ResponseEntity
@@ -55,13 +43,7 @@ public class TaskController {
     }
 
     @PatchMapping("/{taskId}")
-    @Operation(summary = "Update task", description = "Update a task")
-    @ApiResponses(value = {
-            @ApiResponse(responseCode = "200", description = "Task updated"),
-            @ApiResponse(responseCode = "401", description = "Unauthorized user"),
-            @ApiResponse(responseCode = "404", description = "Task not found"),
-            @ApiResponse(responseCode = "500", description = "Error while updating the task"),
-    })
+    @Operation(summary = "Update task", description = "Update the task's data")
     public ResponseEntity<TaskResponseDto> updateTask(
             @PathVariable UUID taskId,
             @RequestBody @Valid TaskRequestDto taskRequestDto
@@ -76,12 +58,6 @@ public class TaskController {
 
     @DeleteMapping("/{taskId}")
     @Operation(summary = "Delete task", description = "Delete a task")
-    @ApiResponses(value = {
-            @ApiResponse(responseCode = "204", description = "Task deleted"),
-            @ApiResponse(responseCode = "401", description = "Unauthorized user"),
-            @ApiResponse(responseCode = "404", description = "Task not found"),
-            @ApiResponse(responseCode = "500", description = "Error while deleting the task")
-    })
     public ResponseEntity<MessageDto> deleteTask(@PathVariable UUID taskId) {
             if (taskId != null )taskService.deleteTask(taskId);
             else throw new NullPointerException("taskId cannot be null");

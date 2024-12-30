@@ -27,7 +27,7 @@ public class AuthFilter extends OncePerRequestFilter {
             @NonNull HttpServletResponse response,
             @NonNull FilterChain filterChain
     ) throws ServletException, IOException {
-        var token = recoverToken(request);
+        var token = getToken(request);
         if (!token.isBlank()) {
             var user = tokenService.getUserFromToken(token);
             Authentication authentication = new UsernamePasswordAuthenticationToken(user.getUserId(), null, user.getAuthorities());
@@ -36,9 +36,9 @@ public class AuthFilter extends OncePerRequestFilter {
         filterChain.doFilter(request, response);
     }
 
-    private String recoverToken(HttpServletRequest request) {
-        var authHeader = request.getHeader("Authorization");
-        System.out.println("AuthHeader: " + authHeader);
-        return (authHeader != null) ? authHeader.replace("Bearer ", "") : "";
+    private String getToken(HttpServletRequest request) {
+        String authorizationHeader = request.getHeader("Authorization");
+        System.out.println("AuthHeader: " + authorizationHeader);
+        return (authorizationHeader != null) ? authorizationHeader.replace("Bearer ", "") : "";
     }
 }

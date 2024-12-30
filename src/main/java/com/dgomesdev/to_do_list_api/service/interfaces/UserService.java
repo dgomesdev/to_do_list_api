@@ -10,5 +10,6 @@ public interface UserService {
     UserModel findUserById(UUID userId);
     UserModel findUserByEmail(String email);
     UserModel updateUser(UserModel updatedUser);
+    void resetPassword(UUID userId, String password);
     void deleteUser(UUID userId);
 }

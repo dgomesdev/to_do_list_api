@@ -32,24 +32,26 @@ public class UserServiceImpl extends BaseServiceImpl implements UserService, Use
 
     @Override
     public UserModel saveUser(UserModel newUser) {
-        if (newUser.getEmail().isBlank())
-            throw new IllegalArgumentException("E-mail can't be empty");
+        if (newUser.getEmail().isBlank() || this.isEmailInvalid(newUser.getEmail()))
+            throw new IllegalArgumentException("Invalid e-mail");
 
         if (userRepository.findUserByEmail(newUser.getEmail()).isPresent())
             throw new DataIntegrityViolationException("User " + newUser.getEmail() + " already exists");
 
         if (newUser.getPassword().isBlank())
-            throw new IllegalArgumentException("Password can't be empty");
+            throw new IllegalArgumentException("Invalid password");
+
+        var savedUser = userRepository.save(
+                new UserEntity(
+                        newUser.getUsername(),
+                        passwordEncoder.encode(newUser.getPassword()),
+                        newUser.getEmail(),
+                        newUser.getAuthorities()
+                )
+        );
 
         return new UserModel.Builder()
-                .fromEntity(userRepository.save(
-                        new UserEntity(
-                                newUser.getUsername(),
-                                passwordEncoder.encode(newUser.getPassword()),
-                                passwordEncoder.encode(newUser.getEmail()),
-                                newUser.getAuthorities()
-                        )
-                ))
+                .fromEntity(savedUser)
                 .build();
     }
 
@@ -84,7 +86,8 @@ public class UserServiceImpl extends BaseServiceImpl implements UserService, Use
         }
 
         if (!user.getEmail().isBlank() && !passwordEncoder.matches(user.getEmail(), existingUser.getEmail())) {
-            existingUser.setEmail(passwordEncoder.encode(user.getEmail()));
+            if (this.isEmailInvalid(user.getEmail())) throw new IllegalArgumentException("Invalid e-mail");
+            existingUser.setEmail(user.getEmail());
         }
 
         if (!user.getPassword().isBlank() && !passwordEncoder.matches(user.getPassword(), existingUser.getPassword())) {
@@ -107,11 +110,18 @@ public class UserServiceImpl extends BaseServiceImpl implements UserService, Use
                 .build();
     }
 
+    @Override
+    public void resetPassword(UUID userId, String password) {
+        var existingUser = userRepository.findById(userId).orElseThrow(() -> new UserNotFoundException(userId));
+        if (password.isBlank()) throw new IllegalArgumentException("Invalid password");
+        existingUser.setPassword(passwordEncoder.encode(password));
+        System.out.println(existingUser.getPassword());
+        userRepository.save(existingUser);
+    }
 
     @Override
     public void deleteUser(UUID userId) {
         if (!userId.toString().equals(this.getUserId())) throw new UnauthorizedUserException(userId);
-
         userRepository.delete(
                 userRepository.findById(userId).orElseThrow(() -> new UserNotFoundException(userId))
         );
