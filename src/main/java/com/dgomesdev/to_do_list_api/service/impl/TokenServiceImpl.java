@@ -27,7 +27,7 @@ public class TokenServiceImpl implements TokenService {
 
     @Override
     public String generateToken(UserModel user) {
-        Instant expirationHour = (user.getPassword().isBlank()) ? setTemporaryExpirationHour() : setNormalExpirationHour();
+        Instant expirationHour = setExpirationHour();
             return JWT
                     .create()
                     .withIssuer("to_do_list_api")
@@ -50,6 +50,7 @@ public class TokenServiceImpl implements TokenService {
             return new UserModel.Builder()
                     .withUserId(userId)
                     .withUserAuthorities(userAuthorities)
+                    .withUsername("user")
                     .build();
     }
 
@@ -61,11 +62,7 @@ public class TokenServiceImpl implements TokenService {
                 .verify(token);
     }
 
-    private Instant setNormalExpirationHour () {
+    private Instant setExpirationHour () {
         return Instant.now().plus(2, ChronoUnit.HOURS);
-    }
-
-    private Instant setTemporaryExpirationHour () {
-        return Instant.now().plus(15, ChronoUnit.MINUTES);
     }
 }

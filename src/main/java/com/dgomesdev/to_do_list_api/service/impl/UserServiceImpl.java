@@ -115,7 +115,6 @@ public class UserServiceImpl extends BaseServiceImpl implements UserService, Use
         var existingUser = userRepository.findById(userId).orElseThrow(() -> new UserNotFoundException(userId));
         if (password.isBlank()) throw new IllegalArgumentException("Invalid password");
         existingUser.setPassword(passwordEncoder.encode(password));
-        System.out.println(existingUser.getPassword());
         userRepository.save(existingUser);
     }
 

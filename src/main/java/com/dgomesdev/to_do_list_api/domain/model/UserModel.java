@@ -65,6 +65,7 @@ public class UserModel extends User {
         public Builder fromEntity(UserEntity userEntity) {
             this.userId = userEntity.getId();
             this.username = userEntity.getUsername();
+            this.password = userEntity.getPassword();
             this.userAuthorities = userEntity.getUserAuthorities();
             this.tasks = userEntity
                     .getTasks()
