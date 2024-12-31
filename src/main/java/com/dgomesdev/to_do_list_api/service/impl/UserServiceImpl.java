@@ -6,6 +6,7 @@ import com.dgomesdev.to_do_list_api.domain.exception.UnauthorizedUserException;
 import com.dgomesdev.to_do_list_api.domain.exception.UserNotFoundException;
 import com.dgomesdev.to_do_list_api.domain.model.UserAuthority;
 import com.dgomesdev.to_do_list_api.domain.model.UserModel;
+import com.dgomesdev.to_do_list_api.service.interfaces.TokenService;
 import com.dgomesdev.to_do_list_api.service.interfaces.UserService;
 import jakarta.transaction.Transactional;
 import org.springframework.dao.DataIntegrityViolationException;
@@ -24,10 +25,16 @@ public class UserServiceImpl extends BaseServiceImpl implements UserService, Use
 
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
+    private final TokenService tokenService;
 
-    public UserServiceImpl(UserRepository userRepository, PasswordEncoder passwordEncoder) {
+    public UserServiceImpl(
+            UserRepository userRepository,
+            PasswordEncoder passwordEncoder,
+            TokenService tokenService
+    ) {
         this.userRepository = userRepository;
         this.passwordEncoder = passwordEncoder;
+        this.tokenService = tokenService;
     }
 
     @Override
@@ -50,9 +57,13 @@ public class UserServiceImpl extends BaseServiceImpl implements UserService, Use
                 )
         );
 
-        return new UserModel.Builder()
+        var response = new UserModel.Builder()
                 .fromEntity(savedUser)
                 .build();
+
+        response.setToken(tokenService.generateToken(response));
+
+        return response;
     }
 
     @Override
@@ -78,6 +89,8 @@ public class UserServiceImpl extends BaseServiceImpl implements UserService, Use
         if (!user.getUserId().toString().equals(this.getUserId()) && !this.getUserAuthorities().contains(UserAuthority.ADMIN))
             throw new UnauthorizedUserException(user.getUserId());
 
+        boolean haveAuthoritiesBeenModified = false;
+
         var existingUser = userRepository.findById(user.getUserId())
                 .orElseThrow(() -> new UserNotFoundException(user.getUserId()));
 
@@ -85,7 +98,7 @@ public class UserServiceImpl extends BaseServiceImpl implements UserService, Use
             existingUser.setUsername(user.getUsername());
         }
 
-        if (!user.getEmail().isBlank() && !passwordEncoder.matches(user.getEmail(), existingUser.getEmail())) {
+        if (!user.getEmail().isBlank() && !existingUser.getEmail().equals(user.getEmail())) {
             if (this.isEmailInvalid(user.getEmail())) throw new IllegalArgumentException("Invalid e-mail");
             existingUser.setEmail(user.getEmail());
         }
@@ -101,13 +114,17 @@ public class UserServiceImpl extends BaseServiceImpl implements UserService, Use
 
         if (!existingUser.getUserAuthorities().equals(userAuthorities)) {
             existingUser.setUserAuthorities(userAuthorities);
+            haveAuthoritiesBeenModified = true;
         }
 
         var updatedUser = userRepository.save(existingUser);
-
-        return new UserModel.Builder()
+        var response = new UserModel.Builder()
                 .fromEntity(updatedUser)
                 .build();
+
+        if (haveAuthoritiesBeenModified) response.setToken(tokenService.generateToken(response));
+
+        return response;
     }
 
     @Override
@@ -131,8 +148,11 @@ public class UserServiceImpl extends BaseServiceImpl implements UserService, Use
         var user = userRepository.findUserByEmail(email)
                 .orElseThrow(() -> new UsernameNotFoundException("User not found with email: " + email));
 
-        return new UserModel.Builder()
+        var response = new UserModel.Builder()
                 .fromEntity(user)
                 .build();
+        response.setToken(tokenService.generateToken(response));
+
+        return response;
     }
 }

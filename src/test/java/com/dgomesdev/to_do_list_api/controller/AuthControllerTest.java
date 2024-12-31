@@ -2,8 +2,8 @@ package com.dgomesdev.to_do_list_api.controller;
 
 import com.dgomesdev.to_do_list_api.domain.model.UserModel;
 import com.dgomesdev.to_do_list_api.dto.request.UserRequestDto;
-import com.dgomesdev.to_do_list_api.dto.response.AuthResponseDto;
-import com.dgomesdev.to_do_list_api.service.interfaces.TokenService;
+import com.dgomesdev.to_do_list_api.dto.response.UserResponseDto;
+import com.dgomesdev.to_do_list_api.service.interfaces.RecoverPasswordService;
 import com.dgomesdev.to_do_list_api.service.interfaces.UserService;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -16,10 +16,11 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
-import org.springframework.security.crypto.password.PasswordEncoder;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
@@ -32,13 +33,10 @@ public class AuthControllerTest {
     private UserService userService;
 
     @Mock
-    private TokenService tokenService;
+    private RecoverPasswordService recoverPasswordService;
 
     @Mock
     private AuthenticationManager authenticationManager;
-
-    @Mock
-    private PasswordEncoder passwordEncoder;
 
     @Mock
     Authentication mockAuthentication;
@@ -49,26 +47,21 @@ public class AuthControllerTest {
     @Mock
     private UserModel mockUserModel;
 
-    private final String token = "sample token";
-
     @Test
     @DisplayName("Should register user successfully")
     public void givenNewUser_whenRegisteringUser_returnResponseCreated() {
         //GIVEN
-        when(mockUserRequestDto.username()).thenReturn("username");
-        when(mockUserRequestDto.password()).thenReturn("password");
-        when(passwordEncoder.encode("password")).thenReturn("encodedPassword");
+        UserRequestDto userRequestDto = new UserRequestDto("username", "danilo.gomes@dgomesdev.com", "password");
         when(userService.saveUser(any(UserModel.class))).thenReturn(mockUserModel);
-        when(tokenService.generateToken(mockUserModel)).thenReturn(token);
+        doNothing().when(recoverPasswordService).sendMail(anyString(), anyString(), anyString());
 
-        //WHEN
-        ResponseEntity<?> response = authController.register(mockUserRequestDto);
+        // WHEN
+        ResponseEntity<?> response = authController.register(userRequestDto);
 
-        //THEN
+        // THEN
         assertEquals(HttpStatus.CREATED, response.getStatusCode());
-        AuthResponseDto responseBody = (AuthResponseDto) response.getBody();
+        UserResponseDto responseBody = (UserResponseDto) response.getBody();
         assertNotNull(responseBody);
-        assertEquals(token, responseBody.token());
     }
 
     @Test
@@ -90,16 +83,14 @@ public class AuthControllerTest {
         //GIVEN
         when(authenticationManager.authenticate(any(UsernamePasswordAuthenticationToken.class))).thenReturn(mockAuthentication);
         when(mockAuthentication.getPrincipal()).thenReturn(mockUserModel);
-        when(tokenService.generateToken(mockUserModel)).thenReturn(token);
 
         //WHEN
         ResponseEntity<?> response = authController.login(mockUserRequestDto);
 
         //THEN
         assertEquals(HttpStatus.OK, response.getStatusCode());
-        AuthResponseDto responseBody = (AuthResponseDto) response.getBody();
+        UserResponseDto responseBody = (UserResponseDto) response.getBody();
         assertNotNull(responseBody);
-        assertEquals(token , responseBody.token());
     }
 
     @Test

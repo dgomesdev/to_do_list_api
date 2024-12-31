@@ -6,6 +6,7 @@ import com.dgomesdev.to_do_list_api.domain.exception.UnauthorizedUserException;
 import com.dgomesdev.to_do_list_api.domain.exception.UserNotFoundException;
 import com.dgomesdev.to_do_list_api.domain.model.UserAuthority;
 import com.dgomesdev.to_do_list_api.domain.model.UserModel;
+import com.dgomesdev.to_do_list_api.service.interfaces.TokenService;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -38,6 +39,9 @@ class UserServiceImplTest {
     private final PasswordEncoder passwordEncoder = new BCryptPasswordEncoder();
 
     @Mock
+    private TokenService tokenService;
+
+    @Mock
     private UserRepository userRepository;
 
     @Mock
@@ -49,19 +53,19 @@ class UserServiceImplTest {
             .withUsername("username")
             .withPassword("password")
             .withUserAuthorities(Set.of(UserAuthority.USER))
-            .withEmail("email")
+            .withEmail("danilo.gomes@dgomesdev.com")
             .build();
 
     UserEntity validUserEntity = new UserEntity(
             "username",
             "password",
-            "email",
+            "danilo.gomes@dgomesdev.com",
             Collections.emptySet()
     );
 
     @BeforeEach
     void setup() {
-        userService = new UserServiceImpl(userRepository, passwordEncoder);
+        userService = new UserServiceImpl(userRepository, passwordEncoder, tokenService);
         Authentication authentication = new UsernamePasswordAuthenticationToken(
                 userId,
                 null,
@@ -91,17 +95,30 @@ class UserServiceImplTest {
     }
 
     @Test
-    @DisplayName("Should throw an exception when trying to save an invalid user")
-    void givenInvalidUser_whenSavingUser_thenThrowException() {
+    @DisplayName("Should throw an exception when trying to save an invalid password")
+    void givenInvalidPassword_whenSavingUser_thenThrowException() {
         // GIVEN
-        when(mockUserModel.getEmail()).thenReturn("email");
+        when(mockUserModel.getEmail()).thenReturn("danilo.gomes@dgomesdev.com");
         when(mockUserModel.getPassword()).thenReturn("");
 
         //WHEN
         IllegalArgumentException exception = assertThrows(IllegalArgumentException.class, () -> userService.saveUser(mockUserModel));
 
         // THEN
-        assertEquals("Password can't be empty", exception.getMessage());
+        assertEquals("Invalid password", exception.getMessage());
+    }
+
+    @Test
+    @DisplayName("Should throw an exception when trying to save an invalid password")
+    void givenInvalidEmail_whenSavingUser_thenThrowException() {
+        // GIVEN
+        when(mockUserModel.getEmail()).thenReturn("email");
+
+        //WHEN
+        IllegalArgumentException exception = assertThrows(IllegalArgumentException.class, () -> userService.saveUser(mockUserModel));
+
+        // THEN
+        assertEquals("Invalid e-mail", exception.getMessage());
     }
 
     @Test
@@ -139,11 +156,10 @@ class UserServiceImplTest {
                 .withUsername("new username")
                 .withUserAuthorities(Set.of(UserAuthority.USER))
                 .withPassword("password")
-                .withEmail("email")
+                .withEmail("newEmail@dgomesdev.com")
                 .build();
         String encodedPassword = passwordEncoder.encode("password");
-        String encodedEmail = passwordEncoder.encode("email");
-        UserEntity existingUser = new UserEntity("username", encodedPassword, encodedEmail, Collections.emptySet());
+        UserEntity existingUser = new UserEntity("username", encodedPassword, "oldEmail@dgomesdev.com", Collections.emptySet());
         when(userRepository.findById(userId)).thenReturn(Optional.of(existingUser));
         when(userRepository.save(any(UserEntity.class))).thenReturn(existingUser);
 
@@ -152,6 +168,7 @@ class UserServiceImplTest {
 
         // THEN
         assertEquals("new username", response.getUsername());
+        assertEquals("newEmail@dgomesdev.com", existingUser.getEmail());
     }
 
     @Test

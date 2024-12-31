@@ -3,11 +3,9 @@ package com.dgomesdev.to_do_list_api.controller;
 import com.dgomesdev.to_do_list_api.domain.model.UserAuthority;
 import com.dgomesdev.to_do_list_api.domain.model.UserModel;
 import com.dgomesdev.to_do_list_api.dto.request.UserRequestDto;
-import com.dgomesdev.to_do_list_api.dto.response.AuthResponseDto;
 import com.dgomesdev.to_do_list_api.dto.response.MessageDto;
 import com.dgomesdev.to_do_list_api.dto.response.UserResponseDto;
 import com.dgomesdev.to_do_list_api.service.interfaces.RecoverPasswordService;
-import com.dgomesdev.to_do_list_api.service.interfaces.TokenService;
 import com.dgomesdev.to_do_list_api.service.interfaces.UserService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -30,15 +28,13 @@ public class AuthController {
     @Autowired
     private UserService userService;
     @Autowired
-    private TokenService tokenService;
-    @Autowired
     private RecoverPasswordService recoverPasswordService;
     @Autowired
     private AuthenticationManager authenticationManager;
 
     @PostMapping("register")
     @Operation(summary = "Register", description = "Create user")
-    public ResponseEntity<AuthResponseDto> register(@RequestBody UserRequestDto user) {
+    public ResponseEntity<UserResponseDto> register(@RequestBody UserRequestDto user) {
         UserModel savedUser = userService.saveUser(new UserModel.Builder()
                 .withUsername(user.username())
                 .withPassword(user.password())
@@ -46,7 +42,6 @@ public class AuthController {
                 .withUserAuthorities(Set.of(UserAuthority.USER))
                 .build()
         );
-        String token = tokenService.generateToken(savedUser);
         recoverPasswordService.sendMail(
                 user.email(),
                 "User registered successfully",
@@ -54,20 +49,19 @@ public class AuthController {
         );
         return ResponseEntity
                 .status(HttpStatus.CREATED)
-                .body(new AuthResponseDto(new UserResponseDto(savedUser), token));
+                .body(new UserResponseDto(savedUser));
     }
 
     @PostMapping("login")
     @Operation(summary = "Login", description = "User login")
-    public ResponseEntity<AuthResponseDto> login(@RequestBody UserRequestDto user) {
+    public ResponseEntity<UserResponseDto> login(@RequestBody UserRequestDto user) {
         Authentication authentication = authenticationManager.authenticate(
                 new UsernamePasswordAuthenticationToken(user.email(), user.password())
         );
         var loggedUser = (UserModel) authentication.getPrincipal();
-        var token = tokenService.generateToken(loggedUser);
         return ResponseEntity
                 .status(HttpStatus.OK)
-                .body(new AuthResponseDto(new UserResponseDto(loggedUser), token));
+                .body(new UserResponseDto(loggedUser));
     }
 
     @PostMapping("recoverPassword")

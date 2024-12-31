@@ -8,8 +8,6 @@ import com.dgomesdev.to_do_list_api.dto.response.UserResponseDto;
 import com.dgomesdev.to_do_list_api.service.interfaces.UserService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
-import jakarta.validation.Valid;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -23,9 +21,11 @@ import java.util.UUID;
 @Tag(name = "User controller", description = "Controller to manage the users")
 public class UserController {
 
-    @Autowired
-    private UserService userService;
+    private final UserService userService;
 
+    public UserController(UserService userService) {
+        this.userService = userService;
+    }
 
     @GetMapping("/{userId}")
     @Operation(summary = "Find user", description = "Find a specific user by ID")
@@ -40,7 +40,7 @@ public class UserController {
     @Operation(summary = "Update user", description = "Update the user's data")
     public ResponseEntity<UserResponseDto> updateUser(
             @PathVariable UUID userId,
-            @RequestBody @Valid UserRequestDto user
+            @RequestBody UserRequestDto user
     ) {
         var updatedUser = userService.updateUser(
                 new UserModel.Builder()

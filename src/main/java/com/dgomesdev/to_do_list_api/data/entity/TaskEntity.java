@@ -28,7 +28,7 @@ public class TaskEntity {
 
         @Setter
         @Column(nullable = false)
-        private Priority priority;
+        private Priority priority = Priority.MEDIUM;
 
         @Setter
         @Column(nullable = false)

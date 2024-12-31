@@ -2,6 +2,7 @@ package com.dgomesdev.to_do_list_api.domain.model;
 
 import com.dgomesdev.to_do_list_api.data.entity.UserEntity;
 import lombok.Getter;
+import lombok.Setter;
 import org.springframework.security.core.userdetails.User;
 
 import java.util.List;
@@ -14,6 +15,8 @@ public class UserModel extends User {
     private final UUID userId;
     private final List<TaskModel> tasks;
     private final String email;
+    @Setter
+    private String token;
 
     private UserModel(Builder builder) {
         super(
