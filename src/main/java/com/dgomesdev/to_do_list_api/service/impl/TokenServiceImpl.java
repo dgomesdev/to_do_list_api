@@ -19,7 +19,7 @@ import java.util.stream.Collectors;
 @Service
 public class TokenServiceImpl implements TokenService {
 
-    @Value("${api.security.token.secret:secret}")
+    @Value("${api.security.token.secret}")
     protected String secret;
 
     private Algorithm buildAlgorithm(String secret) {

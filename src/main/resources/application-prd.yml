@@ -16,7 +16,7 @@ spring:
     port: ${REDIS_PORT}
 
   mail:
-    host: ${MAIL_HOST}
+    host: ${MAIL_HOST:sandbox.smtp.mailtrap.io}
     port: ${MAIL_PORT}
     username: ${MAIL_USERNAME}
     password: ${MAIL_PASSWORD}
