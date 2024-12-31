@@ -44,8 +44,8 @@ public class AuthController {
         );
         recoverPasswordService.sendMail(
                 user.email(),
-                "User registered successfully",
-                "You have registered successfully!"
+                "Success!",
+                "Welcome to the To Do List App " + user.username() + ". You have registered successfully!"
         );
         return ResponseEntity
                 .status(HttpStatus.CREATED)
@@ -69,7 +69,11 @@ public class AuthController {
     public ResponseEntity<MessageDto> recoverPassword(@RequestBody UserRequestDto user) {
         var foundUser = userService.findUserByEmail(user.email());
         var recoveryPasswordCode = recoverPasswordService.generateCode(foundUser.getUserId());
-        recoverPasswordService.sendMail(user.email(), "Recover password", "Your recovery code is: " + recoveryPasswordCode);
+        recoverPasswordService.sendMail(
+                user.email(),
+                "Recover password",
+                "Hello " + foundUser.getUsername() + ". Your recovery code (valid for 15 minutes) is: " + recoveryPasswordCode
+        );
         return ResponseEntity
                 .status(HttpStatus.OK)
                 .body(new MessageDto("Recovery code sent by mail"));
