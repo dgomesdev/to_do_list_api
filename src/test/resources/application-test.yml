@@ -1,0 +1,38 @@
+spring:
+  datasource:
+    url: jdbc:h2:mem:dgomesdev
+    username: dgomesdev
+    password:
+
+  jpa:
+    show-sql: true
+    open-in-view: false
+    hibernate:
+      ddl-auto: create
+    properties:
+      hibernate:
+        format_sql: true
+
+  h2:
+    console:
+      enabled: false
+
+  redis:
+    host: localhost
+    port: 6379
+
+  mail:
+    host: sandbox.smtp.mailtrap.io
+    port: 587
+    username: 79a1d9c14fb20a
+    password: d20446f50f247c
+    properties:
+      smtp:
+        auth: true
+        starttls:
+          enable: true
+
+api:
+  security:
+    token:
+      secret: test-secret-key
