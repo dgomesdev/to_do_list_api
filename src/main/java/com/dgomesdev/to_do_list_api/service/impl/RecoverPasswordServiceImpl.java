@@ -49,7 +49,7 @@ public class RecoverPasswordServiceImpl implements RecoverPasswordService {
     @Override
     public void sendMail(String to, String subject, String body) {
         SimpleMailMessage message = new SimpleMailMessage();
-        message.setFrom(from);
+        message.setFrom("Dgomes Dev <" + from + ">");
         message.setTo(to);
         message.setSubject(subject);
         message.setText(body);
