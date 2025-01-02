@@ -86,7 +86,7 @@ public class UserServiceImpl extends BaseServiceImpl implements UserService, Use
 
     @Override
     public UserModel updateUser(UserModel user) {
-        if (!user.getUserId().toString().equals(this.getUserId()) && !this.getUserAuthorities().contains(UserAuthority.ADMIN))
+        if (!user.getUserId().toString().equals(this.getUserId()))
             throw new UnauthorizedUserException(user.getUserId());
 
         boolean haveAuthoritiesBeenModified = false;
@@ -137,7 +137,8 @@ public class UserServiceImpl extends BaseServiceImpl implements UserService, Use
 
     @Override
     public void deleteUser(UUID userId) {
-        if (!userId.toString().equals(this.getUserId())) throw new UnauthorizedUserException(userId);
+        if (!userId.toString().equals(this.getUserId())  && !this.getUserAuthorities().contains(UserAuthority.ADMIN))
+            throw new UnauthorizedUserException(userId);
         userRepository.delete(
                 userRepository.findById(userId).orElseThrow(() -> new UserNotFoundException(userId))
         );
