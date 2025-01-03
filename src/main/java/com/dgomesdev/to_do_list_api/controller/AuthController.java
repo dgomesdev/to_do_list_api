@@ -45,7 +45,7 @@ public class AuthController {
         recoverPasswordService.sendMail(
                 user.email(),
                 "Success!",
-                "Welcome to the To Do List App " + user.username() + ". You have registered successfully!"
+                "Welcome to the Task List App " + user.username() + ". \nYou have registered successfully!"
         );
         return ResponseEntity
                 .status(HttpStatus.CREATED)
@@ -72,7 +72,7 @@ public class AuthController {
         recoverPasswordService.sendMail(
                 user.email(),
                 "Recover password",
-                "Hello " + foundUser.getUsername() + ". Your recovery code (valid for 15 minutes) is: " + recoveryPasswordCode
+                "Hello " + foundUser.getUsername() + ". \nYour recovery code (valid for 15 minutes) is: \n" + recoveryPasswordCode
         );
         return ResponseEntity
                 .status(HttpStatus.OK)
