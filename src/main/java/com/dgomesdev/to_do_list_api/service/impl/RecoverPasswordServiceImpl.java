@@ -2,10 +2,7 @@ package com.dgomesdev.to_do_list_api.service.impl;
 
 import com.dgomesdev.to_do_list_api.domain.exception.UnauthorizedUserException;
 import com.dgomesdev.to_do_list_api.service.interfaces.RecoverPasswordService;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.redis.core.StringRedisTemplate;
-import org.springframework.mail.SimpleMailMessage;
-import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.stereotype.Service;
 
 import java.util.Objects;
@@ -16,14 +13,9 @@ import java.util.concurrent.TimeUnit;
 public class RecoverPasswordServiceImpl implements RecoverPasswordService {
 
     private final StringRedisTemplate redisTemplate;
-    private final JavaMailSender mailSender;
 
-    @Value("${spring.mail.username}")
-    private String from;
-
-    public RecoverPasswordServiceImpl(StringRedisTemplate redisTemplate, JavaMailSender mailSender) {
+    public RecoverPasswordServiceImpl(StringRedisTemplate redisTemplate) {
         this.redisTemplate = redisTemplate;
-        this.mailSender = mailSender;
     }
 
     @Override
@@ -44,16 +36,5 @@ public class RecoverPasswordServiceImpl implements RecoverPasswordService {
 
     private String recoverCode(String key) {
         return redisTemplate.opsForValue().get(key);
-    }
-
-    @Override
-    public void sendMail(String to, String subject, String body) {
-        SimpleMailMessage message = new SimpleMailMessage();
-        message.setFrom("Dgomes Dev <" + from + ">");
-        message.setTo(to);
-        message.setSubject(subject);
-        message.setText(body);
-
-        mailSender.send(message);
     }
 }

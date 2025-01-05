@@ -5,6 +5,7 @@ import com.dgomesdev.to_do_list_api.domain.model.UserModel;
 import com.dgomesdev.to_do_list_api.dto.request.UserRequestDto;
 import com.dgomesdev.to_do_list_api.dto.response.MessageDto;
 import com.dgomesdev.to_do_list_api.dto.response.UserResponseDto;
+import com.dgomesdev.to_do_list_api.service.interfaces.EmailService;
 import com.dgomesdev.to_do_list_api.service.interfaces.RecoverPasswordService;
 import com.dgomesdev.to_do_list_api.service.interfaces.UserService;
 import io.swagger.v3.oas.annotations.Operation;
@@ -31,6 +32,8 @@ public class AuthController {
     private RecoverPasswordService recoverPasswordService;
     @Autowired
     private AuthenticationManager authenticationManager;
+    @Autowired
+    private EmailService emailService;
 
     @PostMapping("register")
     @Operation(summary = "Register", description = "Create user")
@@ -38,15 +41,11 @@ public class AuthController {
         UserModel savedUser = userService.saveUser(new UserModel.Builder()
                 .withUsername(user.username())
                 .withPassword(user.password())
-                .withEmail(user.email())
+                .withEmail(user.email().trim().toLowerCase())
                 .withUserAuthorities(Set.of(UserAuthority.USER))
                 .build()
         );
-        recoverPasswordService.sendMail(
-                user.email(),
-                "Success!",
-                "Welcome to the Task List App " + user.username() + ". \nYou have registered successfully!"
-        );
+        emailService.sendWelcomeMail(user.email(), user.username());
         return ResponseEntity
                 .status(HttpStatus.CREATED)
                 .body(new UserResponseDto(savedUser));
@@ -56,7 +55,7 @@ public class AuthController {
     @Operation(summary = "Login", description = "User login")
     public ResponseEntity<UserResponseDto> login(@RequestBody UserRequestDto user) {
         Authentication authentication = authenticationManager.authenticate(
-                new UsernamePasswordAuthenticationToken(user.email(), user.password())
+                new UsernamePasswordAuthenticationToken(user.email().trim().toLowerCase(), user.password())
         );
         var loggedUser = (UserModel) authentication.getPrincipal();
         return ResponseEntity
@@ -67,13 +66,9 @@ public class AuthController {
     @PostMapping("recoverPassword")
     @Operation(summary = "recoverPassword", description = "Recover Password")
     public ResponseEntity<MessageDto> recoverPassword(@RequestBody UserRequestDto user) {
-        var foundUser = userService.findUserByEmail(user.email());
+        var foundUser = userService.findUserByEmail(user.email().trim().toLowerCase());
         var recoveryPasswordCode = recoverPasswordService.generateCode(foundUser.getUserId());
-        recoverPasswordService.sendMail(
-                user.email(),
-                "Recover password",
-                "Hello " + foundUser.getUsername() + ". \nYour recovery code (valid for 15 minutes) is: \n" + recoveryPasswordCode
-        );
+        emailService.sendResetPasswordMail(user.email(), foundUser.getUsername(), recoveryPasswordCode);
         return ResponseEntity
                 .status(HttpStatus.OK)
                 .body(new MessageDto("Recovery code sent by mail"));
@@ -82,7 +77,7 @@ public class AuthController {
     @PostMapping("resetPassword/{recoveryCode}")
     @Operation(summary = "Reset password", description = "Reset password")
     public ResponseEntity<MessageDto> resetPassword(@PathVariable String recoveryCode, @RequestBody UserRequestDto user) {
-        var foundUser = userService.findUserByEmail(user.email());
+        var foundUser = userService.findUserByEmail(user.email().trim().toLowerCase());
         recoverPasswordService.validateCode(foundUser.getUserId(), recoveryCode);
         userService.resetPassword(foundUser.getUserId(), user.password());
         return ResponseEntity

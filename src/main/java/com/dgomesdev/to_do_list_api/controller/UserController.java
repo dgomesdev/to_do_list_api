@@ -46,6 +46,7 @@ public class UserController {
                 new UserModel.Builder()
                         .withUserId(userId)
                         .withUsername(user.username())
+                        .withEmail(user.email().trim().toLowerCase())
                         .withPassword(user.password())
                         .withUserAuthorities(Set.of(UserAuthority.USER))
                         .build()

@@ -6,5 +6,4 @@ public interface RecoverPasswordService {
 
     String generateCode(UUID userId);
     void validateCode(UUID key, String code);
-    void sendMail(String to, String subject, String body);
 }
