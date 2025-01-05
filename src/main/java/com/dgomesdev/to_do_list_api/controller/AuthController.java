@@ -77,7 +77,7 @@ public class AuthController {
                 .body(new MessageDto("Recovery code sent by mail"));
     }
 
-    @GetMapping("/reset-password")
+    @GetMapping("reset-password")
     public void redirectToApp(@RequestParam String code, HttpServletResponse response) throws IOException {
         String appLink = "task-list-app://reset-password?code=" + code;
         response.sendRedirect(appLink);
