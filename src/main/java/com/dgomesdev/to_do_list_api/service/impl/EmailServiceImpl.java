@@ -57,9 +57,9 @@ public class EmailServiceImpl implements EmailService {
                 <html>
                 <body style="font-family: Arial, sans-serif; line-height: 1.6;">
                     <p>Hello <strong>%s</strong>,</p>
-                    <p>Your recovery code (valid for 15 minutes) is:</p>
+                    <p>You can click the button below to reset yout password(valid for 15 minutes):</p>
                     <div style="margin: 10px 0;">
-                        <a href="taskListApp://resetPassword?code=%s" style="background-color: #3DDC84; color: #FFFFFF; text-decoration: none; padding: 10px 20px; border-radius: 5px; font-weight: bold;">
+                        <a href="task-list-app://reset-password?code=%s" style="background-color: #3DDC84; color: #FFFFFF; text-decoration: none; padding: 10px 20px; border-radius: 5px; font-weight: bold;">
                             Reset password
                         </a>
                     </div>
