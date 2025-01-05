@@ -10,6 +10,7 @@ import com.dgomesdev.to_do_list_api.service.interfaces.RecoverPasswordService;
 import com.dgomesdev.to_do_list_api.service.interfaces.UserService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -18,6 +19,7 @@ import org.springframework.security.authentication.UsernamePasswordAuthenticatio
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 
+import java.io.IOException;
 import java.util.Set;
 
 @CrossOrigin
@@ -67,6 +69,7 @@ public class AuthController {
     @Operation(summary = "recoverPassword", description = "Recover Password")
     public ResponseEntity<MessageDto> recoverPassword(@RequestBody UserRequestDto user) {
         var foundUser = userService.findUserByEmail(user.email().trim().toLowerCase());
+        System.out.println("Recover password: " + foundUser.getEmail());
         var recoveryPasswordCode = recoverPasswordService.generateCode(foundUser.getUserId());
         emailService.sendResetPasswordMail(user.email(), foundUser.getUsername(), recoveryPasswordCode);
         return ResponseEntity
@@ -74,10 +77,18 @@ public class AuthController {
                 .body(new MessageDto("Recovery code sent by mail"));
     }
 
+    @GetMapping("/reset-password")
+    public void redirectToApp(@RequestParam String code, HttpServletResponse response) throws IOException {
+        String appLink = "task-list-app://reset-password?code=" + code;
+        response.sendRedirect(appLink);
+    }
+
+
     @PostMapping("resetPassword/{recoveryCode}")
     @Operation(summary = "Reset password", description = "Reset password")
     public ResponseEntity<MessageDto> resetPassword(@PathVariable String recoveryCode, @RequestBody UserRequestDto user) {
         var foundUser = userService.findUserByEmail(user.email().trim().toLowerCase());
+        System.out.println("Reset password: " + foundUser.getEmail());
         recoverPasswordService.validateCode(foundUser.getUserId(), recoveryCode);
         userService.resetPassword(foundUser.getUserId(), user.password());
         return ResponseEntity

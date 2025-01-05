@@ -59,7 +59,7 @@ public class EmailServiceImpl implements EmailService {
                     <p>Hello <strong>%s</strong>,</p>
                     <p>You can click the button below to reset yout password(valid for 15 minutes):</p>
                     <div style="margin: 10px 0;">
-                        <a href="task-list-app://reset-password?code=%s" style="background-color: #3DDC84; color: #FFFFFF; text-decoration: none; padding: 10px 20px; border-radius: 5px; font-weight: bold;">
+                        <a href="https://to-do-list-api-dgomesdev.up.railway.app/reset-password?code=%s" style="background-color: #3DDC84; color: #FFFFFF; text-decoration: none; padding: 10px 20px; border-radius: 5px; font-weight: bold;">
                             Reset password
                         </a>
                     </div>
