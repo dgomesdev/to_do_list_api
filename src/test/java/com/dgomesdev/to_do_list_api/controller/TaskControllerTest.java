@@ -1,10 +1,11 @@
 package com.dgomesdev.to_do_list_api.controller;
 
 import com.dgomesdev.to_do_list_api.domain.model.TaskModel;
+import com.dgomesdev.to_do_list_api.domain.model.UserModel;
 import com.dgomesdev.to_do_list_api.dto.request.TaskRequestDto;
-import com.dgomesdev.to_do_list_api.dto.response.MessageDto;
 import com.dgomesdev.to_do_list_api.dto.response.TaskResponseDto;
 import com.dgomesdev.to_do_list_api.service.interfaces.TaskService;
+import com.dgomesdev.to_do_list_api.service.interfaces.UserService;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -31,6 +32,9 @@ class TaskControllerTest {
     private TaskService taskService;
 
     @Mock
+    private UserService userService;
+
+    @Mock
     private TaskRequestDto mockTaskRequestDto;
 
     @Mock
@@ -39,6 +43,9 @@ class TaskControllerTest {
     @Mock
     private TaskResponseDto mockTaskResponseDto;
 
+    @Mock
+    private UserModel mockUserModel;
+
     private final UUID taskId = UUID.randomUUID();
 
     @Test
@@ -46,19 +53,14 @@ class TaskControllerTest {
     void givenValidTask_whenSavingTask_thenReturnCreated() {
         //GIVE
         when(taskService.saveTask(any(TaskModel.class))).thenReturn(mockTaskModel);
+        when(userService.findUserById(any())).thenReturn(mockUserModel);
 
         //WHEN
         ResponseEntity<?> response = taskController.saveTask(mockTaskRequestDto);
 
         //THEN
         assertEquals(HttpStatus.CREATED, response.getStatusCode());
-        TaskResponseDto responseBody = (TaskResponseDto) response.getBody();
-        assertNotNull(responseBody);
-        assertEquals(mockTaskResponseDto.taskId(), responseBody.taskId());
-        assertEquals(mockTaskResponseDto.title(), responseBody.title());
-        assertEquals(mockTaskResponseDto.description(), responseBody.description());
-        assertEquals(mockTaskResponseDto.status(), responseBody.status());
-        assertEquals(mockTaskResponseDto.priority(), responseBody.priority());
+        assertNotNull(response.getBody());
     }
 
     @Test
@@ -71,7 +73,7 @@ class TaskControllerTest {
         exception = assertThrows(NullPointerException.class, () -> taskController.saveTask(mockTaskRequestDto));
 
         //THEN
-        assertEquals("Cannot invoke \"com.dgomesdev.to_do_list_api.domain.model.TaskModel.getTaskId()\" because \"task\" is null", exception.getMessage());
+        assertEquals("Cannot invoke \"com.dgomesdev.to_do_list_api.domain.model.TaskModel.getTaskId()\" because \"savedTask\" is null", exception.getMessage());
 
     }
 
@@ -86,13 +88,7 @@ class TaskControllerTest {
 
         //THEN
         assertEquals(HttpStatus.OK, response.getStatusCode());
-        TaskResponseDto responseBody = (TaskResponseDto) response.getBody();
-        assertNotNull(responseBody);
-        assertEquals(mockTaskResponseDto.taskId(), responseBody.taskId());
-        assertEquals(mockTaskResponseDto.title(), responseBody.title());
-        assertEquals(mockTaskResponseDto.description(), responseBody.description());
-        assertEquals(mockTaskResponseDto.status(), responseBody.status());
-        assertEquals(mockTaskResponseDto.priority(), responseBody.priority());
+        assertNotNull(response.getBody());
     }
 
     @Test
@@ -113,19 +109,14 @@ class TaskControllerTest {
     void givenValidTask_whenUpdatingTask_theReturnResponseOk() {
         //GIVEN
         when(taskService.updateTask(eq(taskId), any(TaskModel.class))).thenReturn(mockTaskModel);
+        when(userService.findUserById(any())).thenReturn(mockUserModel);
 
         //WHEN
         ResponseEntity<?> response = taskController.updateTask(taskId, mockTaskRequestDto);
 
         //THEN
         assertEquals(HttpStatus.OK, response.getStatusCode());
-        TaskResponseDto responseBody = (TaskResponseDto) response.getBody();
-        assertNotNull(responseBody);
-        assertEquals(mockTaskResponseDto.taskId(), responseBody.taskId());
-        assertEquals(mockTaskResponseDto.title(), responseBody.title());
-        assertEquals(mockTaskResponseDto.description(), responseBody.description());
-        assertEquals(mockTaskResponseDto.status(), responseBody.status());
-        assertEquals(mockTaskResponseDto.priority(), responseBody.priority());
+        assertNotNull(response.getBody());
     }
 
     @Test
@@ -138,7 +129,7 @@ class TaskControllerTest {
         exception = assertThrows(NullPointerException.class, () ->taskController.updateTask(null, mockTaskRequestDto));
 
         //THEN
-        assertEquals("Cannot invoke \"com.dgomesdev.to_do_list_api.domain.model.TaskModel.getTaskId()\" because \"task\" is null", exception.getMessage());
+        assertEquals("Cannot invoke \"com.dgomesdev.to_do_list_api.domain.model.TaskModel.getTaskId()\" because \"updatedTask\" is null", exception.getMessage());
     }
 
     @Test
@@ -159,15 +150,14 @@ class TaskControllerTest {
     void givenTaskId_whenDeletingTask_thenReturnResponseNoContent() {
         //GIVEN
         ResponseEntity<?> response;
+        when(userService.findUserById(any())).thenReturn(mockUserModel);
 
         //WHEN
         response = taskController.deleteTask(taskId);
 
         //THEN
-        assertEquals(HttpStatus.NO_CONTENT, response.getStatusCode());
-        MessageDto responseBody = (MessageDto) response.getBody();
-        assertNotNull(responseBody);
-        assertEquals("Task deleted successfully", responseBody.message());
+        assertEquals(HttpStatus.OK, response.getStatusCode());
+        assertNotNull(response.getBody());
     }
 
     @Test

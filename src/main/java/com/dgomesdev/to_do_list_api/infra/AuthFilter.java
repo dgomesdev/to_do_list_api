@@ -38,7 +38,6 @@ public class AuthFilter extends OncePerRequestFilter {
 
     private String getToken(HttpServletRequest request) {
         String authorizationHeader = request.getHeader("Authorization");
-        System.out.println("AuthHeader: " + authorizationHeader);
         return (authorizationHeader != null) ? authorizationHeader.replace("Bearer ", "") : "";
     }
 }

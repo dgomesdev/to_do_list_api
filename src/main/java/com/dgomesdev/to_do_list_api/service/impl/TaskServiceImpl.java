@@ -78,10 +78,11 @@ public class TaskServiceImpl extends BaseServiceImpl implements TaskService {
     }
 
     @Override
-    public void deleteTask(UUID taskId) {
+    public UUID deleteTask(UUID taskId) {
         var task = taskRepository.findById(taskId).orElseThrow(() -> new TaskNotFoundException(taskId));
         if (!task.getUser().getId().toString().equals(this.getUserId()) && !this.getUserAuthorities().contains(UserAuthority.ADMIN))
             throw new UnauthorizedUserException(UUID.fromString(getUserId()));
         taskRepository.delete(task);
+        return task.getUser().getId();
     }
 }

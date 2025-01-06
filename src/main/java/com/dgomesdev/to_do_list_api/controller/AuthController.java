@@ -69,7 +69,6 @@ public class AuthController {
     @Operation(summary = "recoverPassword", description = "Recover Password")
     public ResponseEntity<MessageDto> recoverPassword(@RequestBody UserRequestDto user) {
         var foundUser = userService.findUserByEmail(user.email().trim().toLowerCase());
-        System.out.println("Recover password: " + foundUser.getEmail());
         var recoveryPasswordCode = recoverPasswordService.generateCode(foundUser.getUserId());
         emailService.sendResetPasswordMail(user.email(), foundUser.getUsername(), recoveryPasswordCode);
         return ResponseEntity
@@ -88,7 +87,6 @@ public class AuthController {
     @Operation(summary = "Reset password", description = "Reset password")
     public ResponseEntity<MessageDto> resetPassword(@PathVariable String recoveryCode, @RequestBody UserRequestDto user) {
         var foundUser = userService.findUserByEmail(user.email().trim().toLowerCase());
-        System.out.println("Reset password: " + foundUser.getEmail());
         recoverPasswordService.validateCode(foundUser.getUserId(), recoveryCode);
         userService.resetPassword(foundUser.getUserId(), user.password());
         return ResponseEntity

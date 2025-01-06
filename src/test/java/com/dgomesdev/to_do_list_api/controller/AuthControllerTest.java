@@ -3,6 +3,7 @@ package com.dgomesdev.to_do_list_api.controller;
 import com.dgomesdev.to_do_list_api.domain.model.UserModel;
 import com.dgomesdev.to_do_list_api.dto.request.UserRequestDto;
 import com.dgomesdev.to_do_list_api.dto.response.UserResponseDto;
+import com.dgomesdev.to_do_list_api.service.interfaces.EmailService;
 import com.dgomesdev.to_do_list_api.service.interfaces.RecoverPasswordService;
 import com.dgomesdev.to_do_list_api.service.interfaces.UserService;
 import org.junit.jupiter.api.DisplayName;
@@ -19,8 +20,6 @@ import org.springframework.security.core.Authentication;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.anyString;
-import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
@@ -34,6 +33,9 @@ public class AuthControllerTest {
 
     @Mock
     private RecoverPasswordService recoverPasswordService;
+
+    @Mock
+    private EmailService emailService;
 
     @Mock
     private AuthenticationManager authenticationManager;
@@ -53,7 +55,6 @@ public class AuthControllerTest {
         //GIVEN
         UserRequestDto userRequestDto = new UserRequestDto("username", "danilo.gomes@dgomesdev.com", "password");
         when(userService.saveUser(any(UserModel.class))).thenReturn(mockUserModel);
-        doNothing().when(recoverPasswordService).sendMail(anyString(), anyString(), anyString());
 
         // WHEN
         ResponseEntity<?> response = authController.register(userRequestDto);
@@ -69,6 +70,7 @@ public class AuthControllerTest {
     public void givenInvalidUser_whenRegisteringUser_throwException() {
         //GIVEN
         IllegalArgumentException exception;
+        when(mockUserRequestDto.email()).thenReturn("");
 
         //WHEN
         exception = assertThrows(IllegalArgumentException.class, () -> authController.register(mockUserRequestDto));
@@ -82,6 +84,7 @@ public class AuthControllerTest {
     public void givenValidAttributes_whenLoggingInUser_thenReturnResponseOk() {
         //GIVEN
         when(authenticationManager.authenticate(any(UsernamePasswordAuthenticationToken.class))).thenReturn(mockAuthentication);
+        when(mockUserRequestDto.email()).thenReturn("");
         when(mockAuthentication.getPrincipal()).thenReturn(mockUserModel);
 
         //WHEN
@@ -98,6 +101,7 @@ public class AuthControllerTest {
     public void givenInvalidUser_whenLoggingInUser_throwException() {
         //GIVEN
         NullPointerException exception;
+        when(mockUserRequestDto.email()).thenReturn("");
 
         //WHEN
         exception = assertThrows(NullPointerException.class, () -> authController.login(mockUserRequestDto));

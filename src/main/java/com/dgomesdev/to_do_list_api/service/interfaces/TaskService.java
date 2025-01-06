@@ -9,5 +9,5 @@ public interface TaskService {
     TaskModel saveTask(TaskModel newTask);
     TaskModel findTaskById(UUID taskId);
     TaskModel updateTask(UUID taskId, TaskModel updatedTask);
-    void deleteTask(UUID taskId);
+    UUID deleteTask(UUID taskId);
 }
