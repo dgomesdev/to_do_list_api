@@ -55,8 +55,10 @@ public class TaskServiceImpl extends BaseServiceImpl implements TaskService {
         var existingTask = taskRepository.findById(taskId)
                 .orElseThrow(() -> new TaskNotFoundException(taskId));
 
-        if (!existingTask.getUser().getId().toString().equals(this.getUserId()) && !this.getUserAuthorities().contains(UserAuthority.ADMIN))
-            throw new UnauthorizedUserException(UUID.fromString(getUserId()));
+        var taskUser = existingTask.getUser().getId().toString();
+        var userFromToken = this.getUserId();
+        var isUserInvalid = !Objects.equals(taskUser, userFromToken);
+        if (isUserInvalid) throw new UnauthorizedUserException(UUID.fromString(userFromToken));
 
         if (!Objects.equals(existingTask.getTitle(), task.getTitle())) {
             existingTask.setTitle(task.getTitle());
@@ -80,9 +82,13 @@ public class TaskServiceImpl extends BaseServiceImpl implements TaskService {
     @Override
     public UUID deleteTask(UUID taskId) {
         var task = taskRepository.findById(taskId).orElseThrow(() -> new TaskNotFoundException(taskId));
-        if (!task.getUser().getId().toString().equals(this.getUserId()) && !this.getUserAuthorities().contains(UserAuthority.ADMIN))
-            throw new UnauthorizedUserException(UUID.fromString(getUserId()));
+
+        var taskUser = task.getUser().getId().toString();
+        var userFromToken = this.getUserId();
+        var isUserInvalid = !Objects.equals(taskUser, userFromToken);
+
+        if (isUserInvalid) throw new UnauthorizedUserException(UUID.fromString(userFromToken));
         taskRepository.delete(task);
-        return task.getUser().getId();
+        return UUID.fromString(userFromToken);
     }
 }
