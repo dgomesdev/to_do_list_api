@@ -56,11 +56,8 @@ public class TaskServiceImpl extends BaseServiceImpl implements TaskService {
                 .orElseThrow(() -> new TaskNotFoundException(taskId));
 
         var taskUser = existingTask.getUser().getId().toString();
-        System.out.println(taskUser);
         var userFromToken = this.getUserId();
-        System.out.println(userFromToken);
         var isUserInvalid = !Objects.equals(taskUser, userFromToken);
-        System.out.println(isUserInvalid);
         if (isUserInvalid) throw new UnauthorizedUserException(UUID.fromString(userFromToken));
 
         if (!Objects.equals(existingTask.getTitle(), task.getTitle())) {

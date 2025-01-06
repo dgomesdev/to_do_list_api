@@ -14,6 +14,7 @@ public class TaskModel {
     private final String description;
     private final Priority priority;
     private final Status status;
+    private final UUID userId;
 
     private TaskModel(Builder builder) {
         this.taskId = builder.taskId;
@@ -21,6 +22,7 @@ public class TaskModel {
         this.description = builder.description;
         this.priority = builder.priority;
         this.status = builder.status;
+        this.userId = builder.userId;
     }
 
     public static class Builder {
@@ -29,6 +31,7 @@ public class TaskModel {
         private String description;
         private Priority priority;
         private Status status;
+        private UUID userId;
 
         public Builder fromRequest(TaskRequestDto taskRequestDto) {
             this.title = taskRequestDto.title();
@@ -44,6 +47,7 @@ public class TaskModel {
             this.description = taskEntity.getDescription();
             this.priority = taskEntity.getPriority();
             this.status = taskEntity.getStatus();
+            this.userId = taskEntity.getUser().getId();
             return this;
         }
 

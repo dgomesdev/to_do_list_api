@@ -31,7 +31,7 @@ public class TaskController {
     @Operation(summary = "Save task", description = "Create task")
     public ResponseEntity<UserResponseDto> saveTask(@RequestBody @Valid TaskRequestDto taskRequestDto) {
         var savedTask = taskService.saveTask(new TaskModel.Builder().fromRequest(taskRequestDto).build());
-        var user = userService.findUserById(savedTask.getTaskId());
+        var user = userService.findUserById(savedTask.getUserId());
         return ResponseEntity
                 .status(HttpStatus.CREATED)
                 .body(new UserResponseDto(user));
@@ -56,7 +56,7 @@ public class TaskController {
                 taskId,
                 new TaskModel.Builder().fromRequest(taskRequestDto).build()
         );
-        var user = userService.findUserById(updatedTask.getTaskId());
+        var user = userService.findUserById(updatedTask.getUserId());
         return ResponseEntity
                 .status(HttpStatus.OK)
                 .body(new UserResponseDto(user));
