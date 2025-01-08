@@ -77,6 +77,7 @@ class UserControllerTest {
         //GIVEN
         when(mockUserRequestDto.username()).thenReturn("username");
         when(mockUserRequestDto.password()).thenReturn("");
+        when(mockUserRequestDto.email()).thenReturn("");
         when(userService.updateUser(any(UserModel.class))).thenReturn(mockUserModel);
 
         //WHEN
@@ -96,6 +97,7 @@ class UserControllerTest {
     void givenNullId_whenUpdatingUser_thenThrowException() {
         //GIVEN
         IllegalArgumentException exception;
+        when(mockUserRequestDto.email()).thenReturn("");
 
         //WHEN
         exception = assertThrows(IllegalArgumentException.class, () -> userController.updateUser(null, mockUserRequestDto));

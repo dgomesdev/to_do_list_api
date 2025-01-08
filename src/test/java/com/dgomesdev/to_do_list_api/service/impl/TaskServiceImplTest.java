@@ -8,6 +8,7 @@ import com.dgomesdev.to_do_list_api.domain.exception.TaskNotFoundException;
 import com.dgomesdev.to_do_list_api.domain.exception.UnauthorizedUserException;
 import com.dgomesdev.to_do_list_api.domain.model.TaskModel;
 import com.dgomesdev.to_do_list_api.domain.model.UserAuthority;
+import com.dgomesdev.to_do_list_api.domain.model.UserModel;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -80,6 +81,8 @@ class TaskServiceImplTest {
         //GIVEN
         when(userRepository.findById(userId)).thenReturn(Optional.of(mockUserEntity));
         when(taskRepository.save(any(TaskEntity.class))).thenReturn(mockTaskEntity);
+        when(mockTaskEntity.getUser()).thenReturn(mockUserEntity);
+        when(mockUserEntity.getId()).thenReturn(userId);
 
         //WHEN
         TaskModel response = taskService.saveTask(mockTaskModel);

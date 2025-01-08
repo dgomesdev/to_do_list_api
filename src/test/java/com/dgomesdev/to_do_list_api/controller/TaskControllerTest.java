@@ -73,7 +73,7 @@ class TaskControllerTest {
         exception = assertThrows(NullPointerException.class, () -> taskController.saveTask(mockTaskRequestDto));
 
         //THEN
-        assertEquals("Cannot invoke \"com.dgomesdev.to_do_list_api.domain.model.TaskModel.getTaskId()\" because \"savedTask\" is null", exception.getMessage());
+        assertEquals("Cannot invoke \"com.dgomesdev.to_do_list_api.domain.model.TaskModel.getUserId()\" because \"savedTask\" is null", exception.getMessage());
 
     }
 
@@ -129,7 +129,7 @@ class TaskControllerTest {
         exception = assertThrows(NullPointerException.class, () ->taskController.updateTask(null, mockTaskRequestDto));
 
         //THEN
-        assertEquals("Cannot invoke \"com.dgomesdev.to_do_list_api.domain.model.TaskModel.getTaskId()\" because \"updatedTask\" is null", exception.getMessage());
+        assertEquals("Cannot invoke \"com.dgomesdev.to_do_list_api.domain.model.TaskModel.getUserId()\" because \"updatedTask\" is null", exception.getMessage());
     }
 
     @Test
